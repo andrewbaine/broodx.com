@@ -6,6 +6,10 @@ paper.install(window);
 const along = (a, b, factor) => a.add(b.subtract(a).multiply(factor));
 const midpoint = (a, b, factor) => along(a, b, 0.5);
 
+const logShape = (shape) => {
+  console.log(shape.segments.map((x) => x.point.toString()));
+};
+
 const divide = (p1, p2) => {
   if (p1.x > p2.x) {
     return divide(p2, p1);
@@ -127,9 +131,13 @@ const creaseColor = edgeColor;
 
 const reflection = (path, a, b) => {
   const p2 = path.clone();
-  if (b.x == a.x) {
-    p2.segments.forEach((s) => {
-      s.point.x = 2 * a.x - s.x;
+  if (b.y == a.y) {
+    p2.segments.forEach(({ point }) => {
+      point.y = 2 * a.y - point.y;
+    });
+  } else if (b.x == a.x) {
+    p2.segments.forEach(({ point }) => {
+      point.x = 2 * a.x - point.x;
     });
   } else {
     const m = (b.y - a.y) / (b.x - a.x);
@@ -274,82 +282,6 @@ const phase2 = (startTime, [a, b, c]) => {
   };
 };
 
-const phase3 = (startTime, [a, b, c, d]) => {
-  paper.view.onFrame = () => {};
-
-  paper.project.activeLayer.removeChildren();
-  const rectangle = new paper.Path({
-    segments: [a, b, c, d],
-    fillColor: darkSide,
-    strokeColor: edgeColor,
-  });
-
-  const p = along(b, d, 0.75);
-  const rightHalf = new paper.Path({
-    segments: [b, c, d],
-    fillColor: darkSide,
-    strokeColor: edgeColor,
-    closed: true,
-  });
-  const leftHalf = new paper.Path({
-    segments: [p, a, d],
-    fillColor: darkSide,
-    strokeColor: edgeColor,
-    closed: true,
-  });
-
-  /*  const t1 = new paper.Path({
-    segments: [b, c, p],
-    fillColor: darkSide,
-    strokeColor: edgeColor,
-    closed: true,
-  });
-*/
-
-  const slice = divide(p, c);
-
-  const t1 = rightHalf.intersect(slice);
-  const y = rightHalf.subtract(slice);
-  t1.fillColor = "green";
-  y.fillColor = "yellow";
-
-  const t2 = new paper.Path({
-    segments: [b, a, p],
-    fillColor: darkSide,
-    strokeColor: edgeColor,
-    closed: true,
-  });
-
-  const tweens = [
-    {
-      path: t1,
-      start: t1.clone(),
-      end: reflection(t1, c, p),
-    },
-    {
-      path: t2,
-      start: t2.clone(),
-      end: reflection(t2, a, p),
-    },
-  ];
-  tweens.forEach(({ start, end }) => {
-    start.visible = false;
-    end.visible = false;
-  });
-
-  //  slice.opacity = 0.5;
-  //  slice.fillColor = "red";
-
-  t1.onFrame = ({ time }) => {
-    const factor = clamp(time);
-    tweens.forEach(({ path, start, end }) => {
-      path.interpolate(start, end, factor);
-    });
-  };
-
-  return null;
-};
-
 const getSquare = (center, side) =>
   [
     [-1, 0],
@@ -448,9 +380,6 @@ const fold = (paths, pointToFold, creaseA, creaseB, cb) => {
     [
       (cb) => {
         let cut = divide(creaseA, creaseB);
-        cut.fillColor = "red";
-        cut.opacity = 0.1;
-        cut.selected = true;
         setTimeout(cb, 0, null, cut);
       },
       (cut, cb) => {
@@ -461,8 +390,17 @@ const fold = (paths, pointToFold, creaseA, creaseB, cb) => {
         for (const path of paths) {
           const part1 = path.intersect(cut);
           const part2 = path.subtract(cut);
-          lefts.push(part1);
-          rights.push(part2);
+          cut.remove();
+          if (part1.segments.length > 0) {
+            lefts.push(part1);
+          } else {
+            part1.remove();
+          }
+          if (part2.segments.length > 0) {
+            rights.push(part2);
+          } else {
+            part2.remove();
+          }
           path.remove();
           if (leftIsStationary && part1.contains(pointToFold)) {
             leftIsStationary = false;
@@ -475,7 +413,6 @@ const fold = (paths, pointToFold, creaseA, creaseB, cb) => {
         const result = [];
         for (const x of stationary) {
           result.push(x);
-          console.log(x.fillColor);
           x.bringToFront();
         }
         folds.reverse();
@@ -485,7 +422,6 @@ const fold = (paths, pointToFold, creaseA, creaseB, cb) => {
           result.push(r);
           partToFold.remove();
         }
-        //        cut.remove();
         setTimeout(cb, 0, null, result);
       },
     ],
@@ -503,33 +439,54 @@ window.onload = function () {
   let size = 300;
   let start = new paper.Point(100, 100);
   let backToFront = [];
-  let width = 15;
-  for (let i = width; i < size; i = i + width) {
-    let line = new paper.Path.Rectangle(
-      new paper.Point(start.x + i, start.y),
-      new paper.Point(start.x + i + 1, start.y + size)
-    );
-    line.fillColor = "lightblue";
-    backToFront.push(line);
-    let line2 = new paper.Path.Rectangle(
-      new paper.Point(start.x, start.y + i),
-      new paper.Point(start.x + size, start.y + i + 1)
-    );
-    line2.fillColor = "lightblue";
-    backToFront.push(line2);
-  }
+  let width = 45;
+  // for (let i = width; i < size; i = i + width) {
+  //   let line = new paper.Path.Rectangle(
+  //     new paper.Point(start.x + i, start.y),
+  //     new paper.Point(start.x + i + 1, start.y + size)
+  //   );
+  //   line.fillColor = "pink";
+  //   backToFront.push(line);
+  //   let line2 = new paper.Path.Rectangle(
+  //     new paper.Point(start.x, start.y + i),
+  //     new paper.Point(start.x + size, start.y + i + 1)
+  //   );
+  //   line2.fillColor = "lightblue";
+  //   backToFront.push(line2);
+  // }
 
-  //  let back = drawPaper([325, 325], 250);
-  //  back.fillColor = "green";
-  let horizontalLines;
-  let front = drawPaper(start, 300);
+  let back1 = new paper.Path({
+    segments: [
+      [100, 100],
+      [100, 400],
+      [400, 400],
+    ],
+  });
+  back1.fillColor = "green";
+
+  let back2 = new paper.Path({
+    segments: [
+      [100, 100],
+      [400, 100],
+      [400, 400],
+    ],
+  });
+  back2.fillColor = "red";
   //  square.fillColor = "red";
-  console.log(front);
+  backToFront.push(back1);
+  backToFront.push(back2);
+
+  let front = drawPaper(start, 300);
   backToFront.push(front);
 
   let p1 = along(front.segments[0].point, front.segments[1].point, 1 / 3);
   let p2 = along(front.segments[1].point, front.segments[2].point, 1 / 2);
 
+  const step0 = (cb) => {
+    for (const path of backToFront) {
+      path.bringToFront();
+    }
+  };
   const step1 = async.apply(fold, backToFront, start, p1, p2);
   const step2 = (pieces, cb) => {
     let p3 = along(p1, p2, 0.6);
@@ -539,7 +496,15 @@ window.onload = function () {
     //cb(null);
   };
 
-  async.waterfall([step1, step2], (err) => {
+  const [a, b, c, d] = front.segments.map(({ point }) => point);
+  const steps = [
+    setTimeout,
+    async.apply(fold, backToFront, a, b, d),
+    (pieces, cb) => fold(pieces, b, midpoint(b, c), midpoint(a, d), cb),
+    //    (pieces, cb) => fold(pieces, d, midpoint(d, c), midpoint(a, b), cb),
+  ];
+
+  async.waterfall(steps, (err) => {
     if (err) {
       throw err;
     }
