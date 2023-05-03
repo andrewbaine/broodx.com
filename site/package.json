@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack serve --open"
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "start": "webpack serve --open",
+  "res:build": "rescript",
+  "res:dev": "rescript build -w"
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +23,7 @@
   },
   "dependencies": {
     "async": "^3.2.4",
-    "paper": "^0.12.17"
+    "paper": "^0.12.17",
+    "rescript": "^10.1.4"
   }
 }
