@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "async": "^3.2.4",
+    "newton-raphson-method": "^1.0.2",
     "p5": "^1.6.0",
     "paper": "^0.12.17",
     "rescript": "^10.1.4"
