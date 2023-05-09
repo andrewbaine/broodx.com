@@ -80,38 +80,6 @@ const test = (α, β, γ) => {
   //  console.log("v3 - v2", diffs);
 };
 
-const f = (β) => {
-  const v1 = rotate(v, k, β);
-  let [x, y, z] = v1;
-
-  const kDotV = dot(k1, v1);
-  const kXv = -cosθ * z;
-
-  let kx = k1[0];
-  let f = (α) => x * cos(α) + kXv * sin(α) + kx * kDotV * (1 - cos(α)) - cos2θ;
-  let fPrime = (α) => -x * sin(α) + kXv * cos(α) + kx * kDotV * sin(α);
-  let fpp = (α) => -x * cos(α) - kXv * sin(α) + kx * kDotV * cos(α);
-  let α = mnr(f, fPrime, fpp, 2 * β);
-
-  const v2 = rotate(v1, k1, α);
-  const [_, targetY, targetZ] = v2;
-  [x, y, z] = v;
-  f = (γ) => y * cos(γ) - targetY;
-  let fp = (γ) => -y * sin(γ);
-  fpp = (γ) => -y * cos(γ);
-  const γ = mnr(f, fp, fpp, -β);
-
-  const actual = f(γ);
-  if (Math.abs(actual) > 0.00001) {
-    throw new Error("wtf man");
-  }
-
-  const v3 = rotate(v, [1, 0, 0], γ);
-  console.log(sum(v2, scale(v3, -1)));
-
-  return [α, γ];
-};
-
 const sketch = (p) => {
   const b = ((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ);
 
@@ -163,75 +131,63 @@ const sketch = (p) => {
     p.triangle(0, 0, 1, 0, 1, -1);
   };
 
+  const f = (β, estimate) => {
+    const cosβ = cos(β);
+    const sinβ = sin(β);
+
+    const k = [sinθ, cosθ, 0];
+    const v = [-cos2θ, sin2θ, 0];
+    const kDotV = dot(k, v);
+
+    const a = sin2θ * cosβ + cosθ * kDotV * (1 - cosβ);
+    const b = -(sinθ * sin2θ + cosθ * cos2θ) * sinβ;
+    const c = 0;
+
+    const f = (β) => a * cos(β) + b * sin(β) + c;
+    const fp = (β) => -a * sin(β) + b * cos(β);
+    const fpp = (β) => -a * cos(β) - b * sin(β);
+
+    const φ = mnr(f, fp, fpp, estimate);
+    let α = 2 * φ;
+    while (α > 2 * π) {
+      α = α - 2 * π;
+    }
+    while (α < -2 * π) {
+      α = α + 2 * π;
+    }
+    console.log(α, β);
+    return α;
+  };
+
+  let stage4Estimate = 0.0;
+
   let stage4 = (n) => {
+    const β = n * π;
+    const α = f(β, stage4Estimate);
+    stage4Estimate = α;
+
     p.scale(size / root2);
     p.background(200);
     p.rotateZ((-3 * π) / 4);
     p.fill("lightgreen");
     p.rect(0, 0, 1, 1);
 
-    //    p.triangle(0, 0, 0, 1, -1, 1);
-
-    const theta = n * π;
-
-    p.translate(oneMinusTanθ, 0);
     p.fill("pink");
+    p.translate(oneMinusTanθ, 0);
     p.triangle(0, 0, -oneMinusTanθ, 0, -c * cos2θ, c * sin2θ);
 
     p.rotateZ(-2 * θ);
-    p.rotateX(theta);
+    p.fill("lightblue");
+    p.rotateX(π - α);
     p.triangle(0, 0, -c, 0, -tanθ, 1);
 
     p.rotateZ(θ - π / 2);
-    p.triangle(0, 0, -1 / cosθ, 0, -tanθ * sinθ, sinθ);
-  };
-
-  let stage5 = (n) => {
-    p.scale(size / root2);
-    const β = π * (1 - n);
-    const [α, γ] = f(β);
-    test(α, β, γ);
-    p.background(200);
-
-    let a = oneMinusTanθ;
-    let translation = cartesian(oneMinusTanθ, (-3 * π) / 4);
-    p.translate(translation.x, translation.y);
-
-    p.fill("lightblue");
-    p.circle(0, 0, 0.05);
-
-    p.push();
-    p.fill("white");
-    p.rotateZ(π / 4);
-    p.rotateX(γ - π);
-    let pX = cartesian(c, 2 * θ);
-    p.triangle(0, 0, oneMinusTanθ, 0, pX.x, pX.y);
-    p.pop();
-
-    p.fill("pink");
-    p.rotateZ(π / 4);
-    let pA = cartesian(1 / cos(θ), -(π / 2 + θ));
-    p.triangle(0, 0, oneMinusTanθ, 0, pA.x, pA.y);
-
-    p.fill("lightblue");
-    p.rotateZ(-(π / 2 + θ));
-
-    p.rotateX(α - π);
-    let point = cartesian(tan(θ), θ - π / 2);
-    let point2 = cartesian(1 / cos(θ), 2 * θ - π);
-    p.triangle(0, 0, 1 / cos(θ), 0, point2.x, point2.y);
-
     p.fill("lightyellow");
-    p.rotateZ(2 * θ - π);
-    p.rotateX(β - π);
-    point = cartesian(c, θ - π / 2);
-    p.triangle(0, 0, 1 / cos(θ), 0, point.x, point.y);
 
-    p.fill("lightgreen");
-    p.rotateZ(θ - π / 2);
-    //    p.rotateX(n * π);
-    point = cartesian(oneMinusTanθ, -2 * θ);
-    //    p.triangle(0, 0, c, 0, point.x, point.y);
+    //    p.triangle(0, 0, -1 / cosθ, 0, -tanθ * sinθ, sinθ);
+    p.color("white");
+    p.rotateX(-β);
+    p.triangle(0, 0, -1 / cosθ, 0, -tanθ * sinθ, sinθ);
   };
 
   let stages = [
@@ -252,7 +208,7 @@ const sketch = (p) => {
       draw: stage3,
     },
     {
-      duration: 1000,
+      duration: 10 * 1000,
       draw: stage4,
     },
   ];
