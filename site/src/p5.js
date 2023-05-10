@@ -2,12 +2,16 @@ const p5 = require("p5");
 const nr = require("newton-raphson-method");
 const mnr = require("./mnr");
 
+const π = Math.PI;
+
 const sin = Math.sin;
 const cos = Math.cos;
 const tan = Math.tan;
 
 const root2 = Math.sqrt(2);
 const dot = ([x1, y1, z1], [x2, y2, z2]) => x1 * x2 + y1 * y2 + z1 * z2;
+
+const height = 600;
 
 const unit = (n) => {
   if (n < 0) {
@@ -45,7 +49,6 @@ const rotate = (v, k, θ) =>
   );
 const distance = ([a, b, c]) => Math.sqrt(a * a + b * b + c * c);
 
-const π = Math.PI;
 const θ = π / 10;
 const cosθ = cos(θ);
 const sinθ = sin(θ);
@@ -80,45 +83,92 @@ const test = (α, β, γ) => {
   //  console.log("v3 - v2", diffs);
 };
 
+const background = 200;
+const lightside = "white";
+const darkside = 100;
+
 const sketch = (p) => {
+  let camera;
+  const isFacingCamera = ([a1, a2, a3], [b1, b2, b3], [c1, c2, c3]) => {
+    const v1 = p.createVector(a1 - b1, a2 - b2, a3 - b3);
+    const v2 = p.createVector(c1 - b1, c2 - b2, c3 - b3);
+    const normal = v1.cross(v2);
+    const cam = p.createVector(camera.eyeX, camera.eyeY, camera.eyeZ);
+    const d = normal.dot(cam);
+    console.log(d);
+    return d < 0;
+  };
+
   const b = ((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ);
 
   const c = (1 - tan(θ)) / (Math.sqrt(2) * sin((3 * π) / 4 - 2 * θ));
   let size = 250;
   p.setup = function () {
-    p.createCanvas(600, 600, p.WEBGL);
+    p.createCanvas(height, height, p.WEBGL);
+    camera = p.createCamera();
   };
 
-  let stage1 = (n) => {
-    n = unit((n - 0.3) / 0.7);
-    p.scale(size);
-    p.background(200);
+  let paper = (n) => {
+    const scale = root2 * size;
+    p.scale(root2 * size);
+    p.rotateZ(π / 4);
+    p.translate(-0.5, -0.5);
+    p.background(background);
+    p.fill(lightside);
+    p.rect(0, 0, 1, 1);
+  };
 
-    p.fill("lightyellow");
+  let fold1 = (n) => {
+    const t = -0.75;
+    const θ = n * π;
+    const a = p.createVector(-1, t, 0).mult(size);
+    const b = p.createVector(1, t, 0).mult(size);
+    const c = p.createVector(0, cos(θ) + t, sin(θ)).mult(size);
+
+    let x = a.add(b.sub(a).mult(0.5));
+    let interior = x.add(c.sub(x).mult(0.5));
+
+    const v1 = b.sub(a);
+    const v2 = c.sub(b);
+    const normal = v1.cross(v2).normalize();
+    const cam = p
+      .createVector(camera.eyeX, camera.eyeY, camera.eyeZ)
+      .sub(interior)
+      .normalize();
+
+    console.log(cam.x, cam.y, cam.z);
+    const d = normal.dot(cam);
+    const ifc = d < 0;
+    console.log(d);
+
+    p.scale(size);
+    p.background(background);
+
+    p.translate(0, t);
+    p.fill(lightside);
     p.triangle(-1, 0, 0, -1, 1, 0);
 
-    const θ = (n * π) / 2;
     p.rotateX(θ);
-    p.fill("lightyellow");
+    p.fill(ifc ? darkside : lightside);
     p.triangle(-1, 0, 0, 1, 1, 0);
   };
 
   let stage2 = (n) => {
     n = unit(n / 0.7);
     p.scale(size);
-    p.background(200);
-    p.fill("lightyellow");
+    p.background(background);
+    p.fill(lightside);
     p.triangle(-1, 0, 0, -1, 1, 0);
 
     const θ = ((n + 1) * π) / 2;
     p.rotateX(θ);
-    p.fill("lightgreen");
+    p.fill(darkside);
     p.triangle(-1, 0, 0, 1, 1, 0);
   };
 
   let stage3 = (n) => {
     p.scale(size / root2);
-    p.background(200);
+    p.background(background);
     p.rotateZ((-3 * π) / 4);
     p.fill("lightgreen");
     p.rect(0, 0, 1, 1);
@@ -167,7 +217,7 @@ const sketch = (p) => {
     stage4Estimate = α;
 
     p.scale(size / root2);
-    p.background(200);
+    p.background(background);
     p.rotateZ((-3 * π) / 4);
     p.fill("lightgreen");
     p.rect(0, 0, 1, 1);
@@ -196,15 +246,15 @@ const sketch = (p) => {
       draw: () => {},
     },
     {
-      duration: 000,
-      draw: stage1,
+      duration: 0.5 * 1000,
+      draw: paper,
     },
     {
-      duration: 000,
-      draw: stage2,
+      duration: 10 * 1000,
+      draw: fold1,
     },
     {
-      duration: 000,
+      duration: 3 * 1000,
       draw: stage3,
     },
     {
