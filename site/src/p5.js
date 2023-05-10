@@ -39,7 +39,19 @@ const sum = (...vectors) => {
   return result;
 };
 
+const normalize = ([a, b, c]) => {
+  const d = Math.sqrt(a * a + b * b + c * c);
+  return [a / d, b / d, c / d];
+};
+
+const add = ([a, b, c], [x, y, z]) => [a + x, b + y, c + z];
 const scale = ([a, b, c], s) => [s * a, s * b, s * c];
+const mid = ([a, b, c], [x, y, z]) => [
+  a + (x - a) / 2,
+  b + (y - b) / 2,
+  c + (z - c) / 2,
+];
+const sub = ([a, b, c], [x, y, z]) => [a - x, b - y, c - z];
 
 const rotate = (v, k, θ) =>
   sum(
@@ -89,15 +101,6 @@ const darkside = 100;
 
 const sketch = (p) => {
   let camera;
-  const isFacingCamera = ([a1, a2, a3], [b1, b2, b3], [c1, c2, c3]) => {
-    const v1 = p.createVector(a1 - b1, a2 - b2, a3 - b3);
-    const v2 = p.createVector(c1 - b1, c2 - b2, c3 - b3);
-    const normal = v1.cross(v2);
-    const cam = p.createVector(camera.eyeX, camera.eyeY, camera.eyeZ);
-    const d = normal.dot(cam);
-    console.log(d);
-    return d < 0;
-  };
 
   const b = ((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ);
 
@@ -119,32 +122,30 @@ const sketch = (p) => {
   };
 
   let fold1 = (n) => {
-    const t = -0.75;
+    const t = [-0.5, -0.5, 0.0];
     const θ = n * π;
-    const a = p.createVector(-1, t, 0).mult(size);
-    const b = p.createVector(1, t, 0).mult(size);
-    const c = p.createVector(0, cos(θ) + t, sin(θ)).mult(size);
 
-    let x = a.add(b.sub(a).mult(0.5));
-    let interior = x.add(c.sub(x).mult(0.5));
+    const a = scale(sum([-1, 0, 0], t), size);
+    const b = scale(sum([0, cos(θ), sin(θ)], t), size);
+    const c = scale(sum([1, 0, 0], t), size);
 
-    const v1 = b.sub(a);
-    const v2 = c.sub(b);
-    const normal = v1.cross(v2).normalize();
-    const cam = p
-      .createVector(camera.eyeX, camera.eyeY, camera.eyeZ)
-      .sub(interior)
-      .normalize();
+    const v1 = sub(a, b);
+    const v2 = sub(c, b);
+    const interior = mid(mid(a, b), c);
 
-    console.log(cam.x, cam.y, cam.z);
-    const d = normal.dot(cam);
+    const normal = cross(v1, v2);
+
+    const camVector = normalize(
+      sub([camera.eyeX, camera.eyeY, camera.eyeZ], interior)
+    );
+
+    const d = dot(normal, camVector);
     const ifc = d < 0;
-    console.log(d);
 
     p.scale(size);
     p.background(background);
 
-    p.translate(0, t);
+    p.translate(t[0], t[1]);
     p.fill(lightside);
     p.triangle(-1, 0, 0, -1, 1, 0);
 
