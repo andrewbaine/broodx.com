@@ -3,6 +3,7 @@ const nr = require("newton-raphson-method");
 const mnr = require("./mnr");
 
 const π = Math.PI;
+const halfPi = π / 2;
 
 const sin = Math.sin;
 const cos = Math.cos;
@@ -60,8 +61,10 @@ const rotate = (v, k, θ) =>
     scale(k, dot(k, v) * (1 - cos(θ)))
   );
 const distance = ([a, b, c]) => Math.sqrt(a * a + b * b + c * c);
-
-const θ = π / 10;
+const judgments = {
+  θ: π / 10,
+};
+const θ = judgments.θ;
 const cosθ = cos(θ);
 const sinθ = sin(θ);
 const tanθ = sinθ / cosθ;
@@ -217,7 +220,7 @@ const sketch = (p) => {
     while (α < -2 * π) {
       α = α + 2 * π;
     }
-    console.log(α, β);
+    //    console.log(α, β);
     return α;
   };
 
@@ -227,13 +230,16 @@ const sketch = (p) => {
     const β = n * π;
     const α = f(β, stage4Estimate);
     stage4Estimate = α;
-
     p.scale(size / root2);
     p.background(background);
+
     p.rotateZ((-3 * π) / 4);
+    p.translate(oneMinusTanθ, 0);
+
+    p.rotateZ(2 * θ);
+    p.fill("pink");
 
     p.fill(sideB);
-    p.translate(oneMinusTanθ, 0);
     p.triangle(0, 0, -oneMinusTanθ, 0, -c * cos2θ, c * sin2θ);
 
     p.rotateZ(-2 * θ);
@@ -250,26 +256,65 @@ const sketch = (p) => {
     p.triangle(0, 0, -1 / cosθ, 0, -tanθ * sinθ, sinθ);
   };
 
+  let petalFoldv2 = (n) => {
+    //    p.noStroke();
+    const β = n * π;
+    const α = f(β, stage4Estimate);
+    stage4Estimate = α;
+
+    p.background(background);
+    p.scale(size / root2);
+
+    p.fill(sideB);
+    p.translate(-oneMinusTanθ / root2, -oneMinusTanθ / root2);
+    p.rotateZ(π / 4);
+
+    p.line(0, 0, oneMinusTanθ, 0);
+    p.fill("lightgreen");
+    p.triangle(0, 0, oneMinusTanθ, 0, c * cos2θ, -c * sin2θ);
+
+    p.rotateZ(-2 * θ);
+
+    p.fill(sideB);
+    p.triangle(0, 0, c, 0, tanθ, -1);
+
+    p.push();
+    p.rotateZ(θ - halfPi);
+    p.fill("pink");
+    p.rotateX(-1 * β);
+    p.triangle(0, 0, 1 / cosθ, 0, sinθ * tanθ, -sinθ);
+    p.pop();
+
+    p.rotateX(-1 * (π - α));
+    p.fill("lightyellow");
+    p.triangle(0, 0, c, 0, tanθ, -1);
+
+    p.rotateZ(θ - halfPi);
+    p.rotateX(β);
+    p.fill("pink");
+    p.triangle(0, 0, 1 / cosθ, 0, sinθ * tanθ, -sinθ);
+  };
+
   let stages = [
     {
       duration: 0,
       draw: () => {},
     },
     {
-      duration: 0.5 * 1000,
+      duration: 0.2 * 1000,
       draw: paper,
     },
     {
-      duration: 1.0 * 1000,
+      duration: 3.0 * 1000,
       draw: fold1,
     },
     {
-      duration: 3 * 1000,
+      duration: 3.0 * 1000,
       draw: fold2,
     },
     {
       duration: 2 * 1000,
-      draw: petalFold,
+      draw: petalFoldv2,
     },
   ];
   let t = 0;
