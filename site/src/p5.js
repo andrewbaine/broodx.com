@@ -182,7 +182,7 @@ const sketch = (p) => {
 
     p.triangle(0, 0, 0, 1, -1, 1);
 
-    const θ = (1 - n) * π;
+    const θ = -n * π;
     p.rotateX(θ);
     p.fill("pink");
     p.triangle(0, 0, 1, 0, 1, -1);
@@ -218,7 +218,8 @@ const sketch = (p) => {
 
   let stage4Estimate = 0.0;
 
-  let stage4 = (n) => {
+  let petalFold = (n) => {
+    n = n * n * n * n;
     const β = n * π;
     const α = f(β, stage4Estimate);
     stage4Estimate = α;
@@ -226,8 +227,8 @@ const sketch = (p) => {
     p.scale(size / root2);
     p.background(background);
     p.rotateZ((-3 * π) / 4);
-    p.fill("lightgreen");
-    p.rect(0, 0, 1, 1);
+    //    p.fill("lightgreen");
+    //    p.rect(0, 0, 1, 1);
 
     p.fill("pink");
     p.translate(oneMinusTanθ, 0);
@@ -265,8 +266,8 @@ const sketch = (p) => {
       draw: fold2,
     },
     {
-      duration: 10 * 1000,
-      draw: stage4,
+      duration: 1 * 1000,
+      draw: petalFold,
     },
   ];
   let t = 0;
