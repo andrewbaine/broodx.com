@@ -2,6 +2,8 @@
 'use strict';
 
 var P5 = require("p5");
+var Js_array = require("rescript/lib/js/js_array.js");
+var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 
 var NotPossible = /* @__PURE__ */Caml_exceptions.create("App.NotPossible");
@@ -15,6 +17,43 @@ var P5$1 = {
   Color: Color
 };
 
+var Stage = {};
+
+function blankPaper(p, param) {
+  console.log(p);
+}
+
+var match = Js_array.reduce((function (param, param$1) {
+        var startTime = param[1];
+        var stages = param[0];
+        var endTime = startTime + (param$1[0] * 1000.0 | 0) | 0;
+        stages.push({
+              startTime: startTime,
+              endTime: endTime,
+              draw: param$1[1]
+            });
+        return [
+                stages,
+                endTime
+              ];
+      }), [
+      [],
+      0
+    ], [[
+        0.5,
+        blankPaper
+      ]]);
+
+var stages = match[0];
+
+var currentStage = {
+  contents: Belt_Array.get(stages, 0)
+};
+
+var currentIndex = {
+  contents: 0
+};
+
 function sketch(p) {
   var gray = p.color(200, 255);
   console.log("we sketching yo");
@@ -23,6 +62,7 @@ function sketch(p) {
     });
   p.draw = (function (param) {
       p.background(gray);
+      p.millis();
     });
 }
 
@@ -32,5 +72,10 @@ window.onload = (function (param) {
 
 exports.NotPossible = NotPossible;
 exports.P5 = P5$1;
+exports.Stage = Stage;
+exports.blankPaper = blankPaper;
+exports.stages = stages;
+exports.currentStage = currentStage;
+exports.currentIndex = currentIndex;
 exports.sketch = sketch;
-/*  Not a pure module */
+/* match Not a pure module */
