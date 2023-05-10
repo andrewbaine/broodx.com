@@ -96,8 +96,8 @@ const test = (α, β, γ) => {
 };
 
 const background = 200;
-const lightside = "white";
-const darkside = 100;
+const sideA = "white";
+const sideB = "lightblue";
 
 const sketch = (p) => {
   let camera;
@@ -117,7 +117,7 @@ const sketch = (p) => {
     p.rotateZ(π / 4);
     p.translate(-0.5, -0.5);
     p.background(background);
-    p.fill(lightside);
+    p.fill(sideA);
     p.rect(0, 0, 1, 1);
   };
 
@@ -152,11 +152,11 @@ const sketch = (p) => {
     p.background(background);
 
     p.translate(t[0], t[1]);
-    p.fill(lightside);
+    p.fill(sideA);
     p.triangle(-1, 0, 0, -1, 1, 0);
 
     p.rotateX(θ);
-    p.fill(ifc ? darkside : lightside);
+    p.fill(ifc ? sideB : sideA);
     p.triangle(-1, 0, 0, 1, 1, 0);
   };
 
@@ -164,28 +164,33 @@ const sketch = (p) => {
     n = unit(n / 0.7);
     p.scale(size);
     p.background(background);
-    p.fill(lightside);
+    p.fill(sideA);
     p.triangle(-1, 0, 0, -1, 1, 0);
 
     const θ = ((n + 1) * π) / 2;
     p.rotateX(θ);
-    p.fill(darkside);
+    p.fill(sideB);
     p.triangle(-1, 0, 0, 1, 1, 0);
   };
 
   let fold2 = (n) => {
+    const θ = -n * π;
     p.scale(size / root2);
     p.background(background);
+    p.fill(sideB);
+
+    p.push();
     p.rotateZ((-3 * π) / 4);
-    p.fill("lightgreen");
     p.rect(0, 0, 1, 1);
 
-    p.triangle(0, 0, 0, 1, -1, 1);
-
-    const θ = -n * π;
+    p.fill(sideB);
     p.rotateX(θ);
-    p.fill("pink");
     p.triangle(0, 0, 1, 0, 1, -1);
+
+    p.pop();
+    p.rotateZ((3 * π) / 4);
+    p.rotateX(θ);
+    p.triangle(0, 0, -1, 0, -1, -1);
   };
 
   const f = (β, estimate) => {
@@ -219,7 +224,6 @@ const sketch = (p) => {
   let stage4Estimate = 0.0;
 
   let petalFold = (n) => {
-    n = n * n * n * n;
     const β = n * π;
     const α = f(β, stage4Estimate);
     stage4Estimate = α;
@@ -227,20 +231,18 @@ const sketch = (p) => {
     p.scale(size / root2);
     p.background(background);
     p.rotateZ((-3 * π) / 4);
-    //    p.fill("lightgreen");
-    //    p.rect(0, 0, 1, 1);
 
-    p.fill("pink");
+    p.fill(sideB);
     p.translate(oneMinusTanθ, 0);
     p.triangle(0, 0, -oneMinusTanθ, 0, -c * cos2θ, c * sin2θ);
 
     p.rotateZ(-2 * θ);
-    p.fill("lightblue");
+    p.fill(sideB);
     p.rotateX(π - α);
     p.triangle(0, 0, -c, 0, -tanθ, 1);
 
     p.rotateZ(θ - π / 2);
-    p.fill("lightyellow");
+    p.fill(sideB);
 
     //    p.triangle(0, 0, -1 / cosθ, 0, -tanθ * sinθ, sinθ);
     p.color("white");
@@ -254,11 +256,11 @@ const sketch = (p) => {
       draw: () => {},
     },
     {
-      duration: 0.0 * 1000,
+      duration: 0.5 * 1000,
       draw: paper,
     },
     {
-      duration: 3 * 1000,
+      duration: 1.0 * 1000,
       draw: fold1,
     },
     {
@@ -266,7 +268,7 @@ const sketch = (p) => {
       draw: fold2,
     },
     {
-      duration: 1 * 1000,
+      duration: 2 * 1000,
       draw: petalFold,
     },
   ];
