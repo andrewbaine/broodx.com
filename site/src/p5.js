@@ -121,26 +121,32 @@ const sketch = (p) => {
     p.rect(0, 0, 1, 1);
   };
 
-  let fold1 = (n) => {
-    const t = [-0.5, -0.5, 0.0];
-    const θ = n * π;
-
-    const a = scale(sum([-1, 0, 0], t), size);
-    const b = scale(sum([0, cos(θ), sin(θ)], t), size);
-    const c = scale(sum([1, 0, 0], t), size);
-
+  const isFacingCamera = (a, b, c, camera) => {
     const v1 = sub(a, b);
     const v2 = sub(c, b);
     const interior = mid(mid(a, b), c);
 
     const normal = cross(v1, v2);
 
-    const camVector = normalize(
-      sub([camera.eyeX, camera.eyeY, camera.eyeZ], interior)
-    );
+    const camVector = normalize(sub(camera, interior));
 
     const d = dot(normal, camVector);
     const ifc = d < 0;
+    return d < 0;
+  };
+
+  let fold1 = (n) => {
+    const t = [0.0, 0.0, 0.0];
+    const θ = n * π;
+
+    const a = scale(sum([-1, 0, 0], t), size);
+    const b = scale(sum([0, cos(θ), sin(θ)], t), size);
+    const c = scale(sum([1, 0, 0], t), size);
+    const ifc = isFacingCamera(a, b, c, [
+      camera.eyeX,
+      camera.eyeY,
+      camera.eyeZ,
+    ]);
 
     p.scale(size);
     p.background(background);
@@ -167,7 +173,7 @@ const sketch = (p) => {
     p.triangle(-1, 0, 0, 1, 1, 0);
   };
 
-  let stage3 = (n) => {
+  let fold2 = (n) => {
     p.scale(size / root2);
     p.background(background);
     p.rotateZ((-3 * π) / 4);
@@ -247,16 +253,16 @@ const sketch = (p) => {
       draw: () => {},
     },
     {
-      duration: 0.5 * 1000,
+      duration: 0.0 * 1000,
       draw: paper,
     },
     {
-      duration: 10 * 1000,
+      duration: 3 * 1000,
       draw: fold1,
     },
     {
       duration: 3 * 1000,
-      draw: stage3,
+      draw: fold2,
     },
     {
       duration: 10 * 1000,
