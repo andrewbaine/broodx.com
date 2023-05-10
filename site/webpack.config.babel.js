@@ -11,7 +11,7 @@ export default {
         "<html><head><style>html,body { height: 100%;} canvas[resize] { width: 100%; height: 100%; }</style></head><body></body></html>",
     }),
     new InjectBodyPlugin({
-      content: "<main></main>",
+      content: '<div id="main"></div>',
     }),
   ],
 };
