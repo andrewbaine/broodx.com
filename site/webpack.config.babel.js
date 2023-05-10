@@ -4,7 +4,7 @@ import InjectBodyPlugin from "inject-body-webpack-plugin";
 
 export default {
   mode: "development",
-  entry: "./src/p5.js",
+  entry: "./src/App.bs.js",
   plugins: [
     new HtmlWebpackPlugin({
       templateContent:
