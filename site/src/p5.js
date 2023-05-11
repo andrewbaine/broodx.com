@@ -1,7 +1,6 @@
-const p5 = require("p5");
-const nr = require("newton-raphson-method");
-const mnr = require("./mnr");
-const {
+import p5 from "p5";
+import mnr from "./mnr.js";
+import {
   cross,
   normalize,
   mid,
@@ -10,7 +9,7 @@ const {
   sub,
   sum,
   dot,
-} = require("./vector");
+} from "./vector.js";
 
 const π = Math.PI;
 const halfPi = π / 2;

@@ -1,6 +1,4 @@
-module.exports = modifiedNewtonRaphson;
-
-function modifiedNewtonRaphson(f, fp, fpp, x0, options) {
+export default function (f, fp, fpp, x0, options) {
   var x1,
     y,
     yp,
