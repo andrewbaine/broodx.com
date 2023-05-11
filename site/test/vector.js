@@ -16,23 +16,23 @@ import {
 } from "../src/vector.js";
 
 const π = Math.PI;
+const cos = Math.cos;
+const sin = Math.sin;
 
-const i = [1, 0, 0];
-const j = [0, 1, 0];
-const k = [0, 0, 1];
+const xAxis = [1, 0, 0];
+const yAxis = [0, 1, 0];
+const zAxis = [0, 0, 1];
 
 const randomAngle = () => 2 * π * (1 - 2 * Math.random());
 
 const assertSameVector = (v1, v2) => {
-  const tolerance = 0.000000001;
-  assert.approximately(distance(v1, v2), 0, tolerance);
+  const tolerance = 1e-11;
+  close(distance(v1, v2), 0, tolerance, `expect ${v1} to be ${v2}`);
 };
 
-const close = (a, b, tolerance) => {
-  if (!tolerance) {
-    tolerance = 0;
-  }
-  tap.ok(Math.abs(b - a) <= tolerance);
+const close = (a, b, tolerance, message) => {
+  const diff = Math.abs(b - a);
+  tap.ok(diff <= tolerance, message + ` but differ by ${diff}`);
 };
 
 const randomVector = () => [
@@ -63,7 +63,9 @@ for (const { k, v, θ, expected } of [
   assertSameVector(rotate(v, normalize(k), θ), expected);
 }
 
-for (let i = 0; i < 1000; i++) {
+const numIterations = parseInt(process.env.NUM_ITERATIONS || "100");
+
+for (let i = 0; i < numIterations; i++) {
   const v = randomVector();
   const k = normalize(randomVector());
   const θ = randomAngle();
@@ -98,11 +100,22 @@ for (let i = 0; i < 1000; i++) {
     u[2] + v[2] + v[2],
   ]);
 
-  let x = Math.random();
-  assert.deepEqual(scale(u, x), [u[0] * x, u[1] * x, u[2] * x]);
+  let s = Math.random();
+  assert.deepEqual(scale(u, s), [u[0] * s, u[1] * s, u[2] * s]);
   assert.approximately(magnitude(sub(u, v)), distance(u, v), tolerance);
 
   let m = mid(u, v);
   let n = scale(add(u, v), 0.5);
   assert.deepEqual(m, n);
+
+  let vAboutX = rotate(v, xAxis, θ);
+  let vAboutY = rotate(v, yAxis, θ);
+  let vAboutZ = rotate(v, zAxis, θ);
+
+  const [x, y, z] = v;
+  assertSameVector(vAboutX, [
+    x,
+    y * cos(θ) - z * sin(θ),
+    y * sin(θ) + z * cos(θ),
+  ]);
 }
