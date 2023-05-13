@@ -1,312 +1,159 @@
-const async = require("async");
-const paper = require("paper");
+import p5 from "p5";
+import {
+  add,
+  cross,
+  dot,
+  normalize,
+  mid,
+  rotate,
+  scale,
+  sub,
+} from "./vector.js";
 
-paper.install(window);
+const tan = Math.tan;
+const cos = Math.cos;
+const sin = Math.sin;
 
-const along = (a, b, factor) => a.add(b.subtract(a).multiply(factor));
-const midpoint = (a, b, factor) => along(a, b, 0.5);
+const xAxis = [1, 0, 0];
+const yAxis = [0, 1, 0];
+const zAxis = [0, 0, 1];
 
-const divide = (p1, p2) => {
-  if (p1.x > p2.x) {
-    return divide(p2, p1);
-  }
-  const { width, height } = paper.view.bounds;
-  if (p1.x == p2.x) {
-    return new paper.Path.Rectangle([0, 0], [p1.x, height]);
-  } else if (p2.y == p1.y) {
-    return new paper.Path.Rectangle([0, 0], [width, p1.y]);
-  } else {
-    const m = (p2.y - p1.y) / (p2.x - p1.x);
-    const b = p2.y - m * p2.x;
-    let f = (x) => m * x + b;
-    let y = f(width);
-    let xIntercept = -b / m;
-    let heightIntercept = (height - b) / m;
-    if (b < 0) {
-      if (y < 0) {
-        throw new Error("impossible");
-      } else if (y < height) {
-        // triangle including (w, 0)
-        return new paper.Path({
-          segments: [
-            [xIntercept, 0],
-            [width, 0],
-            [width, y],
-          ],
-        });
-      } else {
-        return new paper.Path({
-          segments: [
-            [0, 0],
-            [xIntercept, 0],
-            [heightIntercept, height],
-            [0, height],
-          ],
-        });
-      }
-    } else if (b < height) {
-      if (y < 0) {
-        // triangle including origin
-        return new paper.Path({
-          segments: [
-            [0, 0],
-            [0, b],
-            [xIntercept, 0],
-          ],
-        });
-      } else if (y < height) {
-        return new paper.Path({
-          segments: [
-            [0, b],
-            [0, 0],
-            [width, 0],
-            [width, y],
-          ],
-        });
-      } else {
-        // triangle including (0, h)
-        return new paper.Path({
-          segments: [
-            [0, height],
-            [0, b],
-            [heightIntercept, height],
-          ],
-        });
-      }
-    } else {
-      // b > height
-      if (y < 0) {
-        return new paper.Path({
-          segments: [
-            [0, 0],
-            [xIntercept, 0],
-            [heightIntercept, height],
-            [0, height],
-          ],
-        });
-      } else if (y < height) {
-        // triangle including (h, w)
-        return new paper.Path({
-          segments: [
-            [heightIntercept, height],
-            [width, y],
-            [width, height],
-          ],
-        });
-      } else {
-        throw new Error("impossible");
-      }
-    }
-  }
+const π = Math.PI;
+const θ = π / 12;
+const height = 600;
+
+const h0 = 0.1;
+const h1 = 0.9;
+
+const tanθ = tan(θ);
+const sinθ = sin(θ);
+const cosθ = cos(θ);
+const root2 = Math.sqrt(2);
+
+const d = (0.5 * 1) / sin(π / 4 + 2 * θ);
+const log = console.log;
+
+const background = 200;
+
+const point = (x, y) => [x, y, 0];
+const polar = (r, θ) => [r * cos(θ), r * sin(θ), 0];
+const unit = (θ) => polar(1, θ);
+
+const reflect = (v, origin, θ) => {
+  const v1 = add(v, scale(origin, -1));
+  const v2 = rotate(point, unit(θ), π);
+  return add(v2, origin);
 };
 
-const crease = (paths, a, b) => {};
+const leftHanded = (shape) => shape.reverse();
 
-const clamp = (x) => {
-  if (x < 0) {
-    return 0;
+const paperTopLeft = point(0, 0);
+const paperTopRight = point(1, 0);
+const paperBottomRight = point(1, 1);
+const paperBottomLeft = point(0, 1);
+const paperCenter = mid(paperTopLeft, paperBottomRight);
+const paperTopCenter = mid(paperTopLeft, paperTopRight);
+const paperRightCenter = mid(paperTopRight, paperBottomRight);
+const paperLeftCenter = mid(paperTopLeft, paperBottomLeft);
+
+const p1 = scale(polar(1 / cosθ, θ), 0.5);
+const p2 = polar(d, π / 4);
+const p3 = add(rotate(p1, zAxis, π / 2), point(1, 0));
+const p4 = sub(point(1, 1), p2);
+
+const t0 = [paperCenter, p1, p2];
+const t1 = [p2, p1, paperTopLeft];
+const t2 = [paperTopLeft, p1, paperTopCenter];
+const t3 = [paperTopCenter, p1, paperTopRight];
+const bigFatDiamond = [paperTopRight, p1, paperCenter, p3];
+const t5 = [paperTopRight, p3, paperRightCenter];
+const t6 = [paperRightCenter, p3, paperBottomRight];
+const t7 = [paperBottomRight, p3, p4];
+const t8 = [p4, p3, paperCenter];
+const t9 = [
+  paperTopLeft,
+  paperLeftCenter,
+  scale(polar(1 / cosθ, π / 2 - θ), 0.5),
+];
+
+const t10 = [paperTopLeft, scale(polar(1 / cosθ, π / 2 - θ), 0.5), p2];
+const t11 = [p2, scale(polar(1 / cosθ, π / 2 - θ), 0.5), paperCenter];
+
+//const otherHalf = [paperBottomRight, paperTopLeft, paperBottomLeft];
+
+const triangles = [t0, t1, t2, t3, t5, t6, t7, t8, t9, t10, t11];
+
+const makeShape = (h0, h1) => {
+  if (h0 > h1) {
+    return makeShape(h1, h0);
   }
-  if (x > 1) {
-    return 1;
-  }
-  return x;
+  let x = (tanθ * sin(π / 4)) / (2 * sin(π / 4 + θ));
+
+  let span = 1 / (2 * cosθ) - x;
+
+  let a = point(0, 0.5);
+  let b = add(a, point(tanθ / 2, 0));
+  let c = add(b, polar(x + h0 * span, π / 2 + θ));
+  let d = add(a, point(0, 0.5 * h0));
+
+  let f = point(0.5, 1);
+  let e = sub(f, point(0, tanθ / 2));
+  let h = add(e, polar(x + h0 * span, π - θ));
+  let g = add(f, point(-0.5 * h0, 0));
+
+  let shape = [a, b, c, d];
+  return [shape, [e, f, g, h]];
 };
 
-const makeVectors = (path, destination) =>
-  path.segments.map(({ point }, i) => destination[i].subtract(point));
+const shapes = [bigFatDiamond, ...makeShape(h0, h1)];
+const turnOver = ([p1, p2, p3]) => [p1, p3, p2];
 
-const white = 1.0;
-const black = 0.0;
-
-const lightGrey = 0.9;
-const edgeColor = black;
-const lightSide = white;
-const darkSide = 0.95;
-const creaseColor = edgeColor;
-
-const reflection = (path, a, b) => {
-  const p2 = path.clone();
-  if (b.y == a.y) {
-    p2.segments.forEach(({ point }) => {
-      point.y = 2 * a.y - point.y;
-    });
-  } else if (b.x == a.x) {
-    p2.segments.forEach(({ point }) => {
-      point.x = 2 * a.x - point.x;
-    });
-  } else {
-    const m = (b.y - a.y) / (b.x - a.x);
-    const reflectionMatrix = new paper.Matrix(
-      1 - Math.pow(m, 2),
-      2 * m,
-      2 * m,
-      Math.pow(m, 2) - 1,
-      0,
-      0
-    ).scale(1 / (1 + Math.pow(m, 2)));
-    p2.translate(a.multiply(-1));
-    p2.transform(reflectionMatrix);
-    p2.translate(a);
-  }
-  return p2;
+const isFacingCamera = ([a, b, c, ...rest], camera) => {
+  const v1 = sub(a, b);
+  const v2 = sub(c, b);
+  const interior = mid(mid(a, b), c);
+  const normal = cross(v1, v2);
+  const camVector = normalize(sub(camera, interior));
+  return dot(normal, camVector) > 0;
 };
 
-const getSquare = (center, side) =>
-  [
-    [-1, 0],
-    [0, -1],
-    [1, 0],
-    [0, 1],
-  ].map(
-    ([x, y]) =>
-      new paper.Point(center.x + (x * side) / 2, center.y + (y * side) / 2)
-  );
-
-let drawPaper = (top, size) => {
-  let from = new paper.Point(top);
-  let to = from.add([size, size]);
-  let square = new paper.Path.Rectangle({
-    from,
-    to,
-    strokeColor: lightGrey,
-    fillColor: white,
-    opacity: 0.96,
-  });
-  return square;
-};
-
-const fold = (paths, pointToFold, creaseA, creaseB, cb) => {
-  async.waterfall(
-    [
-      (cb) => {
-        let cut = divide(creaseA, creaseB);
-        setTimeout(cb, 0, null, cut);
-      },
-      (cut, cb) => {
-        const lefts = [];
-        const rights = [];
-
-        let leftIsStationary = true;
-        for (const path of paths) {
-          const part1 = path.intersect(cut);
-          const part2 = path.subtract(cut);
-          cut.remove();
-          if (part1.segments.length > 0) {
-            lefts.push(part1);
-          } else {
-            part1.remove();
-          }
-          if (part2.segments.length > 0) {
-            rights.push(part2);
-          } else {
-            part2.remove();
-          }
-          path.remove();
-          if (leftIsStationary && part1.contains(pointToFold)) {
-            leftIsStationary = false;
-          }
-        }
-        const [folds, stationary] = leftIsStationary
-          ? [rights, lefts]
-          : [lefts, rights];
-        let top = stationary[0];
-        const result = [];
-        for (const x of stationary) {
-          result.push(x);
-          x.bringToFront();
-        }
-        folds.reverse();
-        for (const partToFold of folds) {
-          const r = reflection(partToFold, creaseA, creaseB);
-          r.bringToFront();
-          result.push(r);
-          partToFold.remove();
-        }
-        setTimeout(cb, 0, null, result);
-      },
-    ],
-    cb
-  );
-};
-
-window.onload = function () {
-  paper.setup("myCanvas");
-  //  let square = getSquare(new Point(300, 300), 320);
-  //  paper.view.onFrame = ({ time, delta, count }) => {
-  //    phase1(time, square);
-  //  };
-
-  let size = 300;
-  let start = new paper.Point(100, 100);
-  let backToFront = [];
-  let width = 45;
-  // for (let i = width; i < size; i = i + width) {
-  //   let line = new paper.Path.Rectangle(
-  //     new paper.Point(start.x + i, start.y),
-  //     new paper.Point(start.x + i + 1, start.y + size)
-  //   );
-  //   line.fillColor = "pink";
-  //   backToFront.push(line);
-  //   let line2 = new paper.Path.Rectangle(
-  //     new paper.Point(start.x, start.y + i),
-  //     new paper.Point(start.x + size, start.y + i + 1)
-  //   );
-  //   line2.fillColor = "lightblue";
-  //   backToFront.push(line2);
-  // }
-
-  let back1 = new paper.Path({
-    segments: [
-      [100, 100],
-      [100, 400],
-      [400, 400],
-    ],
-  });
-  back1.fillColor = "green";
-
-  let back2 = new paper.Path({
-    segments: [
-      [100, 100],
-      [400, 100],
-      [400, 400],
-    ],
-  });
-  back2.fillColor = "red";
-  //  square.fillColor = "red";
-  backToFront.push(back1);
-  backToFront.push(back2);
-
-  let front = drawPaper(start, 300);
-  backToFront.push(front);
-
-  let p1 = along(front.segments[0].point, front.segments[1].point, 1 / 3);
-  let p2 = along(front.segments[1].point, front.segments[2].point, 1 / 2);
-
-  const step0 = (cb) => {
-    for (const path of backToFront) {
-      path.bringToFront();
-    }
-  };
-  const step1 = async.apply(fold, backToFront, start, p1, p2);
-  const step2 = (pieces, cb) => {
-    let p3 = along(p1, p2, 0.6);
-    let p4 = along(front.segments[2].point, front.segments[3].point, 0.5);
-
-    fold(pieces, front.segments[2].point, p3, p4, cb);
-    //cb(null);
+const sketch = (p) => {
+  let camera;
+  const drawTriangle = (t) => {
+    const [p1, p2, p3] = t;
+    const fill = isFacingCamera(t, [camera.eyeX, camera.eyeY, camera.eyeZ])
+      ? "white"
+      : "pink";
+    p.fill(fill);
+    p.triangle(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
   };
 
-  const [a, b, c, d] = front.segments.map(({ point }) => point);
-  const steps = [
-    setTimeout,
-    async.apply(fold, backToFront, a, b, d),
-    (pieces, cb) => fold(pieces, b, midpoint(b, c), midpoint(a, d), cb),
-    //    (pieces, cb) => fold(pieces, d, midpoint(d, c), midpoint(a, b), cb),
-  ];
-
-  async.waterfall(steps, (err) => {
-    if (err) {
-      throw err;
+  const drawShape = (s) => {
+    p.beginShape();
+    for (const [x, y, z] of s) {
+      p.vertex(x, y);
     }
-  });
+    p.endShape(p.CLOSE);
+  };
+
+  let scale = 300;
+  p.setup = function () {
+    p.createCanvas(height, height, p.WEBGL);
+    camera = p.createCamera();
+    p.background(200);
+  };
+  p.draw = function () {
+    p.translate(-scale / 2, -scale / 2);
+    p.background(200);
+    p.scale(scale);
+    p.fill("white");
+    for (const t of triangles) {
+      drawTriangle(t);
+    }
+    for (const s of shapes) {
+      drawShape(s);
+    }
+  };
 };
+
+new p5(sketch, document.getElementById("main"));

@@ -24,9 +24,9 @@ export const normalize = ([a, b, c]) => {
 export const add = ([a, b, c], [x, y, z]) => [a + x, b + y, c + z];
 export const scale = ([a, b, c], s) => [s * a, s * b, s * c];
 export const mid = ([a, b, c], [x, y, z]) => [
-  a + (x - a) / 2,
-  b + (y - b) / 2,
-  c + (z - c) / 2,
+  (a + x) / 2,
+  (b + y) / 2,
+  (c + z) / 2,
 ];
 export const sub = ([a, b, c], [x, y, z]) => [a - x, b - y, c - z];
 
