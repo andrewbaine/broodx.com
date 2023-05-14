@@ -2,6 +2,7 @@
 'use strict';
 
 var P5 = require("p5");
+var Point = require("./Point.bs.js");
 var Js_array = require("rescript/lib/js/js_array.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
@@ -54,21 +55,55 @@ var currentIndex = {
   contents: 0
 };
 
+var halfPi = Math.PI / 2;
+
+var t = Math.PI / 12;
+
 function sketch(p) {
   var gray = p.color(200, 255);
-  console.log("we sketching yo");
+  var a = Point.make(0, 0);
+  var b = Point.make(1, 0);
+  var c = Point.make(1, 1);
+  var d = Point.make(0, 1);
+  var center = Point.midpoint(Point.midpoint(a, c), Point.midpoint(b, d));
+  var topCenter = Point.midpoint(a, b);
+  var bottomCenter = Point.midpoint(c, d);
+  var leftCenter = Point.midpoint(a, d);
+  var rightCenter = Point.midpoint(b, c);
+  console.log("center", center);
+  var pA = Point.scale(0.5, Point.make(1, Math.tan(t)));
+  var pB = Point.rotate(center, pA, halfPi);
+  var pC = Point.rotate(center, pA, Math.PI);
+  var pD = Point.rotate(center, pA, 3 * Math.PI / 2);
+  var qA = Point.polar(0.5 / Math.sin(2 * t + Math.PI / 4), Math.PI / 4);
+  Point.subtract(Point.make(1.0, 1.0), qA);
+  var triangle = function (param, param$1, param$2) {
+    p.triangle(param[0], param[1], param$1[0], param$1[1], param$2[0], param$2[1]);
+  };
   p.setup = (function (param) {
       p.createCanvas(600, 600, p.WEBGL);
-    });
-  p.draw = (function (param) {
       p.background(gray);
-      p.millis();
+      p.scale(600 / 2);
+      p.translate(-0.5, -0.5, 0.0);
+      p.fill("white");
+      triangle(a, pA, topCenter);
+      triangle(a, leftCenter, pD);
+      triangle(b, topCenter, pA);
+      triangle(b, pB, rightCenter);
+      triangle(c, rightCenter, pB);
+      triangle(c, pC, bottomCenter);
+      triangle(d, bottomCenter, pC);
+      triangle(d, pD, leftCenter);
+      triangle(a, qA, pA);
+      triangle(a, pD, qA);
     });
 }
 
 window.onload = (function (param) {
     new P5(sketch, document.getElementById("main"));
   });
+
+var h = 0;
 
 exports.NotPossible = NotPossible;
 exports.P5 = P5$1;
@@ -77,5 +112,8 @@ exports.blankPaper = blankPaper;
 exports.stages = stages;
 exports.currentStage = currentStage;
 exports.currentIndex = currentIndex;
+exports.halfPi = halfPi;
+exports.t = t;
+exports.h = h;
 exports.sketch = sketch;
 /* match Not a pure module */

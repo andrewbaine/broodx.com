@@ -1,8 +1,8 @@
-import HtmlWebpackPlugin from "html-webpack-plugin";
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-export default {
+module.exports = {
   mode: "development",
-  entry: "./src/index.js",
+  entry: "./src/App.bs.js",
   plugins: [
     new HtmlWebpackPlugin({
       templateContent:

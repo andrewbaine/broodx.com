@@ -91,15 +91,19 @@ const makeShape = (h0, h1) => {
 
   let span = 1 / (2 * cosθ) - x;
 
-  let a = point(0, 0.5);
-  let b = add(a, point(tanθ / 2, 0));
-  let c = add(b, polar(x + h0 * span, π / 2 + θ));
-  let d = add(a, point(0, 0.5 * h0));
+  const a = point(0, 0.5);
+  const b = add(a, point(tanθ / 2, 0));
+  const c = add(b, polar(x + h0 * span, π / 2 + θ));
+  const j = add(b, polar(x + h1 * span, π / 2 + θ));
+  const d = add(a, point(0, 0.5 * h0));
+  const i = add(a, point(0, 0.5 * h1));
 
-  let f = point(0.5, 1);
-  let e = sub(f, point(0, tanθ / 2));
-  let h = add(e, polar(x + h0 * span, π - θ));
-  let g = add(f, point(-0.5 * h0, 0));
+  const f = point(0.5, 1);
+  const e = sub(f, point(0, tanθ / 2));
+  const h = add(e, polar(x + h0 * span, π - θ));
+  const k = add(e, polar(x + h1 * span, π - θ));
+  const g = add(f, point(-0.5 * h0, 0));
+  const l = add(f, point(-0.5 * h1, 0));
 
   let shape = [a, b, c, d];
   return [shape, [e, f, g, h]];
