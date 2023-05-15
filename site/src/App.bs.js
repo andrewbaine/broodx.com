@@ -3,8 +3,11 @@
 
 var P5 = require("p5");
 var Point = require("./Point.bs.js");
+var Segment = require("./Segment.bs.js");
 var Js_array = require("rescript/lib/js/js_array.js");
 var Belt_Array = require("rescript/lib/js/belt_Array.js");
+var Belt_Option = require("rescript/lib/js/belt_Option.js");
+var Intersection = require("./Intersection.bs.js");
 var Caml_exceptions = require("rescript/lib/js/caml_exceptions.js");
 
 var NotPossible = /* @__PURE__ */Caml_exceptions.create("App.NotPossible");
@@ -13,9 +16,12 @@ var Mode = {};
 
 var Color = {};
 
+var EndShapeOptions = {};
+
 var P5$1 = {
   Mode: Mode,
-  Color: Color
+  Color: Color,
+  EndShapeOptions: EndShapeOptions
 };
 
 var Stage = {};
@@ -59,16 +65,36 @@ var halfPi = Math.PI / 2;
 
 var t = Math.PI / 12;
 
+function ccw(param, param$1, param$2) {
+  var ay = param[1];
+  var ax = param[0];
+  return (param$2[1] - ay) * (param$1[0] - ax) > (param$1[1] - ay) * (param$2[0] - ax);
+}
+
 function sketch(p) {
+  var light = "white";
+  var dark = "lightpink";
+  var polygon = function (points) {
+    if (points.length > 2) {
+      p.fill(ccw(Belt_Array.getExn(points, 0), Belt_Array.getExn(points, 1), Belt_Array.getExn(points, 2)) ? dark : light);
+      p.beginShape();
+      points.forEach(function (param) {
+            p.vertex(param[0], param[1]);
+          });
+      p.endShape(p.CLOSE);
+      return ;
+    }
+    
+  };
   var gray = p.color(200, 255);
   var a = Point.make(0, 0);
   var b = Point.make(1, 0);
   var c = Point.make(1, 1);
-  var d = Point.make(0, 1);
-  var center = Point.midpoint(Point.midpoint(a, c), Point.midpoint(b, d));
+  var dd = Point.make(0, 1);
+  var center = Point.midpoint(Point.midpoint(a, c), Point.midpoint(b, dd));
   var topCenter = Point.midpoint(a, b);
-  var bottomCenter = Point.midpoint(c, d);
-  var leftCenter = Point.midpoint(a, d);
+  var bottomCenter = Point.midpoint(c, dd);
+  var leftCenter = Point.midpoint(a, dd);
   var rightCenter = Point.midpoint(b, c);
   console.log("center", center);
   var pA = Point.scale(0.5, Point.make(1, Math.tan(t)));
@@ -76,26 +102,142 @@ function sketch(p) {
   var pC = Point.rotate(center, pA, Math.PI);
   var pD = Point.rotate(center, pA, 3 * Math.PI / 2);
   var qA = Point.polar(0.5 / Math.sin(2 * t + Math.PI / 4), Math.PI / 4);
-  Point.subtract(Point.make(1.0, 1.0), qA);
-  var triangle = function (param, param$1, param$2) {
-    p.triangle(param[0], param[1], param$1[0], param$1[1], param$2[0], param$2[1]);
+  var qC = Point.rotate(center, qA, Math.PI);
+  var l1 = Belt_Option.getExn(Segment.make(pD, dd));
+  var l2 = Belt_Option.getExn(Segment.make(pC, dd));
+  var s1 = Point.interpolate(dd, Point.make(0, 0.75), 0.4);
+  var s2 = Point.rotate(dd, s1, halfPi);
+  var crease0 = Segment.make(s1, s2);
+  var match;
+  if (crease0 !== undefined) {
+    var p$1 = Intersection.make(crease0, l1);
+    if (typeof p$1 === "number") {
+      throw {
+            RE_EXN_ID: NotPossible,
+            Error: new Error()
+          };
+    }
+    var s3 = p$1._0;
+    var p$2 = Intersection.make(crease0, l2);
+    if (typeof p$2 === "number") {
+      throw {
+            RE_EXN_ID: NotPossible,
+            Error: new Error()
+          };
+    }
+    var s4 = p$2._0;
+    match = [
+      s3,
+      s4
+    ];
+  } else {
+    match = [
+      dd,
+      dd
+    ];
+  }
+  var s4$1 = match[1];
+  var s3$1 = match[0];
+  var s5 = Point.interpolate(Point.subtract(Point.scale(2.0, s1), dd), Point.make(0, 0.5), 0.6);
+  var s6 = Point.rotate(dd, s5, halfPi);
+  var crease1 = Segment.make(s5, s6);
+  var match$1;
+  if (crease1 !== undefined) {
+    var p$3 = Intersection.make(crease1, l1);
+    if (typeof p$3 === "number") {
+      throw {
+            RE_EXN_ID: NotPossible,
+            Error: new Error()
+          };
+    }
+    var s3$2 = p$3._0;
+    var p$4 = Intersection.make(crease1, l2);
+    if (typeof p$4 === "number") {
+      throw {
+            RE_EXN_ID: NotPossible,
+            Error: new Error()
+          };
+    }
+    var s4$2 = p$4._0;
+    match$1 = [
+      s3$2,
+      s4$2
+    ];
+  } else {
+    match$1 = [
+      dd,
+      dd
+    ];
+  }
+  var s8 = match$1[1];
+  var s7 = match$1[0];
+  console.log(s5);
+  var triangle = function (p1, p2, p3) {
+    p.fill(ccw(p1, p2, p3) ? dark : light);
+    p.triangle(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
   };
   p.setup = (function (param) {
       p.createCanvas(600, 600, p.WEBGL);
       p.background(gray);
       p.scale(600 / 2);
       p.translate(-0.5, -0.5, 0.0);
-      p.fill("white");
       triangle(a, pA, topCenter);
       triangle(a, leftCenter, pD);
       triangle(b, topCenter, pA);
       triangle(b, pB, rightCenter);
       triangle(c, rightCenter, pB);
       triangle(c, pC, bottomCenter);
-      triangle(d, bottomCenter, pC);
-      triangle(d, pD, leftCenter);
+      triangle(s1, dd, s3$1);
+      triangle(s2, s4$1, dd);
+      triangle(s3$1, dd, s4$1);
+      polygon([
+            s5,
+            s1,
+            s3$1,
+            s7
+          ]);
+      polygon([
+            s6,
+            s8,
+            s4$1,
+            s2
+          ]);
+      polygon([
+            s3$1,
+            s4$1,
+            s8,
+            s7
+          ]);
+      polygon([
+            leftCenter,
+            s5,
+            s7,
+            pD
+          ]);
+      polygon([
+            bottomCenter,
+            pC,
+            s8,
+            s6
+          ]);
+      polygon([
+            s7,
+            s8,
+            pC,
+            qC,
+            qA,
+            pD
+          ]);
       triangle(a, qA, pA);
       triangle(a, pD, qA);
+      triangle(c, pB, qC);
+      triangle(c, qC, pC);
+      polygon([
+            center,
+            pA,
+            b,
+            pB
+          ]);
     });
 }
 
@@ -103,7 +245,9 @@ window.onload = (function (param) {
     new P5(sketch, document.getElementById("main"));
   });
 
-var h = 0;
+var h0 = 0.4;
+
+var h1 = 0.6;
 
 exports.NotPossible = NotPossible;
 exports.P5 = P5$1;
@@ -114,6 +258,8 @@ exports.currentStage = currentStage;
 exports.currentIndex = currentIndex;
 exports.halfPi = halfPi;
 exports.t = t;
-exports.h = h;
+exports.h0 = h0;
+exports.h1 = h1;
+exports.ccw = ccw;
 exports.sketch = sketch;
 /* match Not a pure module */
