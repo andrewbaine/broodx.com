@@ -129,8 +129,8 @@ const sketch = (p) => {
     //    p.triangle(-h * 0.5, 0, h * 0.5, 0, 0, -h * 0.5);
 
     const p1 = [-h * 0.5, -1 + h * 0.5, 0];
-    const p2 = [h * 0.5, -1 + h * 0.5, 0];
-    const p3 = [0, -1, 0];
+    const p2 = [0, -1, 0];
+    const p3 = [h * 0.5, -1 + h * 0.5, 0];
 
     const ifc = isFacingCamera(
       [p1, p2, p3].map((p) => {
@@ -144,10 +144,36 @@ const sketch = (p) => {
       })
     );
 
-    p.fill(ifc ? sideA : sideB);
     p.rotateX(-θ);
+    if (ifc) {
+      p.fill(sideA);
+      p.triangle(
+        -h1 * 0.5,
+        (h1 - h2) * 0.5,
+        h1 * 0.5,
+        (h1 - h2) * 0.5,
+        0,
+        (2 * h1 - h2) * 0.5
+      );
+      p.beginShape();
 
-    p.triangle(-h * 0.5, 0, 0, -h * 0.5, h * 0.5, 0);
+      p.fill(sideB);
+      p.vertex(-h2 * 0.5, 0);
+      p.vertex(h2 * 0.5, 0);
+      p.vertex(h1 * 0.5, (h1 - h2) * 0.5);
+      p.vertex(0, (2 * h1 - h2) * 0.5);
+
+      p.vertex(-h1 * 0.5, (h1 - h2) * 0.5);
+      p.endShape(p.CLOSE);
+    } else {
+      p.fill(sideA);
+      p.beginShape();
+      p.vertex(-h2 * 0.5, 0);
+      p.vertex(h2 * 0.5, 0);
+      p.vertex(h1 * 0.5, (h1 - h2) * 0.5);
+      p.vertex(-h1 * 0.5, (h1 - h2) * 0.5);
+      p.endShape(p.CLOSE);
+    }
   };
 
   let smallValley1 = (n) => {
@@ -333,6 +359,7 @@ const sketch = (p) => {
       duration: 3.0 * 1000,
       draw: smallValley2,
     },
+    /*
     {
       duration: 3.0 * 1000,
       draw: fold2,
@@ -340,7 +367,8 @@ const sketch = (p) => {
     {
       duration: 2 * 1000,
       draw: petalFoldv2,
-    },
+      },
+      */
   ];
   let t = 0;
   for (const stage of stages) {
