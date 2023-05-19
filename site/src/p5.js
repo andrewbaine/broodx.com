@@ -120,6 +120,9 @@ const sketch = (p) => {
     p.vertex(-h * 0.5, -1 + h * 0.5);
     p.endShape(p.CLOSE);
 
+    p.fill(sideA);
+    p.triangle(h * 0.5, -1 + h * 0.5, 0, -1, -h * 0.5, -1 + h * 0.5);
+
     if (2 * h1 > h2) {
       throw new Error("2 * h1 > h2");
     }
@@ -180,8 +183,8 @@ const sketch = (p) => {
     const h = h1;
     const θ = n * π;
     p.background(background);
-
     p.scale(size);
+
     p.fill(sideB);
     p.beginShape();
     p.vertex(-1, 0);
@@ -189,6 +192,9 @@ const sketch = (p) => {
     p.vertex(h * 0.5, -1 + h * 0.5);
     p.vertex(-h * 0.5, -1 + h * 0.5);
     p.endShape(p.CLOSE);
+
+    p.fill(sideA);
+    p.triangle(h * 0.5, -1 + h * 0.5, 0, -1, -h * 0.5, -1 + h * 0.5);
 
     p.translate(0, -1 + h * 0.5);
     p.fill(sideA);
@@ -253,10 +259,40 @@ const sketch = (p) => {
     p.scale(size / root2);
     p.background(background);
     p.fill(sideB);
+    let x = 0.5 * (1 - h2);
+    let y = 0.5 * h1;
+    p.beginShape();
+    p.vertex(-0.5 * root2, -0.5 * root2);
+    p.vertex(0, 0);
+    p.vertex(0.5 * root2, -0.5 * root2);
+    p.vertex((0.5 - x) * root2, (-0.5 - x) * root2);
+    p.vertex(y * root2, (-1 + h2 - 0.5 * h1) * root2);
+    p.vertex(-y * root2, (-1 + h2 - 0.5 * h1) * root2);
+    p.vertex((-0.5 + x) * root2, (-0.5 - x) * root2);
+    p.endShape(p.CLOSE);
+
+    p.push();
+    p.fill(sideA);
+    p.beginShape();
+    p.vertex((0.5 - x) * root2, (-0.5 - x) * root2);
+    p.vertex(y * root2, (-1 + h2 - 0.5 * h1) * root2);
+    p.vertex(-y * root2, (-1 + h2 - 0.5 * h1) * root2);
+    p.vertex((-0.5 + x) * root2, (-0.5 - x) * root2);
+    p.endShape();
+
+    p.triangle(
+      (0.5 - x) * root2,
+      (-0.5 - x) * root2,
+      (-0.5 + x) * root2,
+      (-0.5 - x) * root2,
+      0,
+      -1 * root2
+    );
+    p.pop();
 
     p.push();
     p.rotateZ((-3 * π) / 4);
-    p.rect(0, 0, 1, 1);
+    //    p.rect(0, 0, 1, 1);
 
     p.fill(sideB);
     p.rotateX(θ);
@@ -359,11 +395,11 @@ const sketch = (p) => {
       duration: 3.0 * 1000,
       draw: smallValley2,
     },
-    /*
     {
       duration: 3.0 * 1000,
       draw: fold2,
     },
+    /*
     {
       duration: 2 * 1000,
       draw: petalFoldv2,
