@@ -59,6 +59,35 @@ function interpolate(start, end, t) {
         ];
 }
 
+function ccw($staropt$star, param, param$1, param$2) {
+  var ay = param[1];
+  var ax = param[0];
+  var tolerance = $staropt$star !== undefined ? $staropt$star : 0.0;
+  return (param$2[1] - ay) * (param$1[0] - ax) - (param$1[1] - ay) * (param$2[0] - ax) > tolerance;
+}
+
+function collinear($staropt$star, param, param$1, param$2) {
+  var y3 = param$2[1];
+  var y2 = param$1[1];
+  var y1 = param[1];
+  var tolerance = $staropt$star !== undefined ? $staropt$star : 0.0;
+  var areaDoubled = Math.abs(param[0] * (y2 - y3) + param$1[0] * (y3 - y1) + param$2[0] * y1 - y2);
+  return areaDoubled <= tolerance;
+}
+
+function distance(param, param$1) {
+  return Math.sqrt(Math.pow(param$1[0] - param[0], 2) + Math.pow(param$1[1] - param[1], 2));
+}
+
+function close(toleranceOpt, p1, p2) {
+  var tolerance = toleranceOpt !== undefined ? toleranceOpt : 0.0;
+  return distance(p1, p2) <= tolerance;
+}
+
+function determinant(param, param$1) {
+  return param[0] * param$1[1] - param$1[0] * param[1];
+}
+
 exports.make = make;
 exports.polar = polar;
 exports.scale = scale;
@@ -66,4 +95,8 @@ exports.midpoint = midpoint;
 exports.subtract = subtract;
 exports.rotate = rotate;
 exports.interpolate = interpolate;
+exports.ccw = ccw;
+exports.collinear = collinear;
+exports.determinant = determinant;
+exports.close = close;
 /* No side effect */

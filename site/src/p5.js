@@ -1,10 +1,12 @@
 import p5 from "p5";
 import mnr from "./mnr.js";
 import {
+  add,
   cross,
   normalize,
   mid,
   rotate,
+  rotateX,
   scale,
   sub,
   sum,
@@ -56,24 +58,15 @@ const k = [-sinθ, cosθ, 0];
 const k1 = [-sinθ, -cosθ, 0];
 const xAxis = [1, 0, 0];
 
-const test = (α, β, γ) => {
-  const v1 = rotate(v, k, β);
-  const v2 = rotate(v1, k1, α);
-
-  if (Math.abs(v2[0] - cos(2 * θ)) > 0.00001) {
-    throw new Error("wtf");
-  }
-
-  const v3 = rotate(v, xAxis, γ);
-  const diffs = [v3[0] - v2[0], v3[1] - v2[1], v3[2] - v2[2]];
-  //  console.log("v3 - v2", diffs);
-};
-
 const background = 200;
 const sideA = "white";
 const sideB = "lightblue";
 
 const sketch = (p) => {
+  let triangle = ([a, b], [c, d], [e, f]) => {
+    p.triangle(a, b, c, d, e, f);
+  };
+
   let camera;
 
   const b = ((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ);
@@ -95,37 +88,119 @@ const sketch = (p) => {
     p.rect(0, 0, 1, 1);
   };
 
-  const isFacingCamera = (a, b, c, camera) => {
+  const isFacingCamera = ([a, b, c]) => {
     const v1 = sub(a, b);
     const v2 = sub(c, b);
     const interior = mid(mid(a, b), c);
 
     const normal = cross(v1, v2);
 
-    const camVector = normalize(sub(camera, interior));
+    const camVector = normalize(
+      sub([camera.eyeX, camera.eyeY, camera.eyeZ], interior)
+    );
 
     const d = dot(normal, camVector);
-    const ifc = d < 0;
     return d < 0;
   };
 
-  let fold1 = (n) => {
-    const t = [0.0, 0.0, 0.0];
+  const h1 = 0.3;
+  const h2 = 0.9;
+
+  let smallValley2 = (n) => {
+    let h = h2;
+    const θ = n * π;
+    p.background(background);
+
+    p.scale(size);
+    p.fill(sideB);
+    p.beginShape();
+    p.vertex(-1, 0);
+    p.vertex(1, 0);
+    p.vertex(h * 0.5, -1 + h * 0.5);
+    p.vertex(-h * 0.5, -1 + h * 0.5);
+    p.endShape(p.CLOSE);
+
+    if (2 * h1 > h2) {
+      throw new Error("2 * h1 > h2");
+    }
+
+    p.translate(0, -1 + h * 0.5);
+    p.fill(sideA);
+    //    p.triangle(-h * 0.5, 0, h * 0.5, 0, 0, -h * 0.5);
+
+    const p1 = [-h * 0.5, -1 + h * 0.5, 0];
+    const p2 = [h * 0.5, -1 + h * 0.5, 0];
+    const p3 = [0, -1, 0];
+
+    const ifc = isFacingCamera(
+      [p1, p2, p3].map((p) => {
+        let translate = [0.0, 1 - h * 0.5, 0.0];
+        let q = add(p, translate);
+        let r = rotateX(q, -θ);
+        let s = sub(r, translate);
+        let t = scale(s, size);
+        console.log({ q, r, s, t });
+        return t;
+      })
+    );
+
+    p.fill(ifc ? sideA : sideB);
+    p.rotateX(-θ);
+
+    p.triangle(-h * 0.5, 0, 0, -h * 0.5, h * 0.5, 0);
+  };
+
+  let smallValley1 = (n) => {
+    const h = h1;
+    const θ = n * π;
+    p.background(background);
+
+    p.scale(size);
+    p.fill(sideB);
+    p.beginShape();
+    p.vertex(-1, 0);
+    p.vertex(1, 0);
+    p.vertex(h * 0.5, -1 + h * 0.5);
+    p.vertex(-h * 0.5, -1 + h * 0.5);
+    p.endShape(p.CLOSE);
+
+    p.translate(0, -1 + h * 0.5);
+    p.fill(sideA);
+    //    p.triangle(-h * 0.5, 0, h * 0.5, 0, 0, -h * 0.5);
+
+    const p1 = [-h * 0.5, -1 + h * 0.5, 0];
+    const p2 = [h * 0.5, -1 + h * 0.5, 0];
+    const p3 = [0, -1, 0];
+
+    const ifc = isFacingCamera(
+      [p1, p2, p3].map((p) => {
+        let translate = [0.0, 1 - h * 0.5, 0.0];
+        let q = add(p, translate);
+        let r = rotateX(q, -θ);
+        let s = sub(r, translate);
+        let t = scale(s, size);
+        console.log({ q, r, s, t });
+        return t;
+      })
+    );
+
+    p.fill(ifc ? sideA : sideB);
+    p.rotateX(-θ);
+
+    p.triangle(-h * 0.5, 0, 0, -h * 0.5, h * 0.5, 0);
+  };
+
+  let largeValleyFold = (n) => {
     const θ = n * π;
 
-    const a = scale(sum([-1, 0, 0], t), size);
-    const b = scale(sum([0, cos(θ), sin(θ)], t), size);
-    const c = scale(sum([1, 0, 0], t), size);
-    const ifc = isFacingCamera(a, b, c, [
-      camera.eyeX,
-      camera.eyeY,
-      camera.eyeZ,
-    ]);
+    const a = scale([-1, 0, 0], size);
+    const b = scale([0, cos(θ), sin(θ)], size);
+    const c = scale([1, 0, 0], size);
+    const ifc = isFacingCamera([a, b, c]);
 
     p.scale(size);
     p.background(background);
 
-    p.translate(t[0], t[1]);
     p.fill(sideA);
     p.triangle(-1, 0, 0, -1, 1, 0);
 
@@ -197,36 +272,6 @@ const sketch = (p) => {
 
   let stage4Estimate = 0.0;
 
-  let petalFold = (n) => {
-    const β = n * π;
-    const α = f(β, stage4Estimate);
-    stage4Estimate = α;
-    p.scale(size / root2);
-    p.background(background);
-
-    p.rotateZ((-3 * π) / 4);
-    p.translate(oneMinusTanθ, 0);
-
-    p.rotateZ(2 * θ);
-    p.fill("pink");
-
-    p.fill(sideB);
-    p.triangle(0, 0, -oneMinusTanθ, 0, -c * cos2θ, c * sin2θ);
-
-    p.rotateZ(-2 * θ);
-    p.fill(sideB);
-    p.rotateX(π - α);
-    p.triangle(0, 0, -c, 0, -tanθ, 1);
-
-    p.rotateZ(θ - π / 2);
-    p.fill(sideB);
-
-    //    p.triangle(0, 0, -1 / cosθ, 0, -tanθ * sinθ, sinθ);
-    p.color("white");
-    p.rotateX(-β);
-    p.triangle(0, 0, -1 / cosθ, 0, -tanθ * sinθ, sinθ);
-  };
-
   let petalFoldv2 = (n) => {
     //    p.noStroke();
     const β = n * π;
@@ -267,7 +312,7 @@ const sketch = (p) => {
   };
 
   let stages = [
-    {
+    /*    {
       duration: 0,
       draw: () => {},
     },
@@ -277,7 +322,16 @@ const sketch = (p) => {
     },
     {
       duration: 3.0 * 1000,
-      draw: fold1,
+      draw: largeValleyFold,
+      },
+      */
+    {
+      duration: 3.0 * 1000,
+      draw: smallValley1,
+    },
+    {
+      duration: 3.0 * 1000,
+      draw: smallValley2,
     },
     {
       duration: 3.0 * 1000,

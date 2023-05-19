@@ -13,5 +13,11 @@
     }
   ],
   "suffix": ".bs.js",
-  "bs-dependencies": []
+  "jsx": {
+    "version": 4,
+    "mode": "classic"
+  },
+  "bs-dependencies": [
+    "@rescript/react"
+  ]
 }

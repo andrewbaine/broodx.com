@@ -1,1 +1,1 @@
-test-regex: src/App_Test.bs.js
+test-regex: src/.*_Test.bs.js

@@ -41,3 +41,5 @@ export const rotate = (v, k, θ) =>
     scale(cross(k, v), Math.sin(θ)),
     scale(k, dot(k, v) * (1 - Math.cos(θ)))
   );
+
+export const rotateX = (v, θ) => rotate(v, [1, 0, 0], θ);

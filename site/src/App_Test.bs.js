@@ -8,7 +8,7 @@ var Js_array = require("rescript/lib/js/js_array.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Intersection = require("./Intersection.bs.js");
 
-var Tap$1 = {};
+Tap.ok(Point.collinear(undefined, Point.make(0.0, 0.0), Point.make(2.0, 2.0), Point.make(1.0, 1.0)));
 
 Js_array.forEach((function (param) {
         Tap.same(Intersection.make(param[0], param[1]), param[2]);
@@ -20,5 +20,133 @@ Js_array.forEach((function (param) {
         }
       ]]);
 
-exports.Tap = Tap$1;
+var polygon = Js_array.map((function (param) {
+        return Point.make(param[0], param[1]);
+      }), [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        9,
+        3
+      ],
+      [
+        10,
+        3
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        13,
+        3
+      ],
+      [
+        14,
+        3
+      ],
+      [
+        14,
+        6
+      ],
+      [
+        6,
+        6
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        7,
+        2
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        12,
+        5
+      ],
+      [
+        12,
+        1
+      ],
+      [
+        11,
+        1
+      ],
+      [
+        11,
+        4
+      ],
+      [
+        8,
+        4
+      ],
+      [
+        8,
+        1
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        1,
+        6
+      ],
+      [
+        0,
+        6
+      ]
+    ]);
+
+var p = Point.make;
+
+exports.p = p;
+exports.polygon = polygon;
 /*  Not a pure module */
