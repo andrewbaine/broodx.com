@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "tap",
     "start": "webpack serve --open",
@@ -32,5 +33,11 @@
     "paper": "^0.12.17",
     "rescript": "^10.1.4"
   },
-  "tap": {}
+  "tap": {
+    "node-arg": [
+      "--no-warnings",
+      "--experimental-loader",
+      "@istanbuljs/esm-loader-hook"
+    ]
+  }
 }

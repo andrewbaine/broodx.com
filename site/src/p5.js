@@ -142,7 +142,6 @@ const sketch = (p) => {
         let r = rotateX(q, -θ);
         let s = sub(r, translate);
         let t = scale(s, size);
-        console.log({ q, r, s, t });
         return t;
       })
     );
@@ -211,7 +210,6 @@ const sketch = (p) => {
         let r = rotateX(q, -θ);
         let s = sub(r, translate);
         let t = scale(s, size);
-        console.log({ q, r, s, t });
         return t;
       })
     );
@@ -348,7 +346,7 @@ const sketch = (p) => {
     p.rotateZ(π / 4);
 
     p.line(0, 0, oneMinusTanθ, 0);
-    p.fill("lightgreen");
+    p.fill(sideB);
     p.triangle(0, 0, oneMinusTanθ, 0, c * cos2θ, -c * sin2θ);
 
     p.rotateZ(-2 * θ);
@@ -399,12 +397,11 @@ const sketch = (p) => {
       duration: 3.0 * 1000,
       draw: fold2,
     },
-    /*
+
     {
-      duration: 2 * 1000,
+      duration: 3 * 1000,
       draw: petalFoldv2,
-      },
-      */
+    },
   ];
   let t = 0;
   for (const stage of stages) {
