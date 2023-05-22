@@ -1,4 +1,4 @@
-import { linearEquation } from "../src/point2d.js";
+import { linearEquation, intersect } from "../src/point2d.js";
 import tap from "tap";
 
 let sameLinearEquation = (e1, e2, tolerance, t) => {
@@ -75,4 +75,19 @@ tap.test("linear equations", (t) => {
 
 tap.throws(() => {
   linearEquation([1, 1], [1, 1]);
+});
+
+//tap.same(intersect(
+
+tap.test("intersections", (t) => {
+  for (const [e1, e2, expected] of [
+    [[0, 1, -2], [1, 0, -10], { intersection: [10, 2] }],
+    [[0, 1, -2], [1, -1, 10], { intersection: [-8, 2] }],
+    [[0, 1, 2], [0, 1, 1], { none: true }],
+    [[1, 1, 1], [1, 1, 1], { infinitelyManySolutions: true }],
+    [[1, 0, 1], [1, 0, 2], { none: true }],
+  ]) {
+    tap.same(intersect(e1, e2), expected);
+  }
+  t.end();
 });
