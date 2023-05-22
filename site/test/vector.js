@@ -9,6 +9,7 @@ import {
   mid,
   normalize,
   rotate,
+  rotateX,
   scale,
   sub,
   sum,
@@ -129,3 +130,10 @@ tap.test("this is another test suite", (t) => {
 
   t.end();
 });
+
+tap.same(add([0, 1, 2], [-1, -2, -4]), [-1, -1, -2]);
+
+tap.same(
+  rotateX([1, 2, 3], π / 4),
+  [1, -0.7071067811865472, 3.5355339059327378]
+);

@@ -42,6 +42,11 @@ tap.test("linear equations", (t) => {
       expected: [1, 0, 0],
     },
     {
+      a: [1, 0],
+      b: [2, 0],
+      expected: [0, 1, 0],
+    },
+    {
       a: [1, 1],
       b: [2, 2],
       expected: [1, -1, 0],
@@ -66,4 +71,8 @@ tap.test("linear equations", (t) => {
     sameLinearEquation(expected, actual, tolerance, t);
   }
   t.end();
+});
+
+tap.throws(() => {
+  linearEquation([1, 1], [1, 1]);
 });
