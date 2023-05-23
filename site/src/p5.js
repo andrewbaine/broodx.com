@@ -13,6 +13,8 @@ import {
   dot,
 } from "./vector.js";
 
+import { linearEquation, intersect } from "./point2d.js";
+
 const π = Math.PI;
 const halfPi = π / 2;
 
@@ -67,6 +69,14 @@ const sketch = (p) => {
     p.triangle(a, b, c, d, e, f);
   };
 
+  const polygon = (...vertices) => {
+    p.beginShape();
+    for (const [x, y] of vertices) {
+      p.vertex(x, y);
+    }
+    p.endShape(p.CLOSE);
+  };
+
   let camera;
 
   const b = ((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ);
@@ -103,8 +113,8 @@ const sketch = (p) => {
     return d < 0;
   };
 
-  const h1 = 0.3;
-  const h2 = 0.9;
+  const h1 = 0.1;
+  const h2 = 0.5;
 
   let smallValley2 = (n) => {
     let h = h2;
@@ -113,12 +123,7 @@ const sketch = (p) => {
 
     p.scale(size);
     p.fill(sideB);
-    p.beginShape();
-    p.vertex(-1, 0);
-    p.vertex(1, 0);
-    p.vertex(h * 0.5, -1 + h * 0.5);
-    p.vertex(-h * 0.5, -1 + h * 0.5);
-    p.endShape(p.CLOSE);
+    polygon([-1, 0], [1, 0], [h * 0.5, -1 + h * 0.5], [-h * 0.5, -1 + h * 0.5]);
 
     p.fill(sideA);
     p.triangle(h * 0.5, -1 + h * 0.5, 0, -1, -h * 0.5, -1 + h * 0.5);
@@ -157,24 +162,22 @@ const sketch = (p) => {
         0,
         (2 * h1 - h2) * 0.5
       );
-      p.beginShape();
-
       p.fill(sideB);
-      p.vertex(-h2 * 0.5, 0);
-      p.vertex(h2 * 0.5, 0);
-      p.vertex(h1 * 0.5, (h1 - h2) * 0.5);
-      p.vertex(0, (2 * h1 - h2) * 0.5);
-
-      p.vertex(-h1 * 0.5, (h1 - h2) * 0.5);
-      p.endShape(p.CLOSE);
+      polygon(
+        [-h2 * 0.5, 0],
+        [h2 * 0.5, 0],
+        [h1 * 0.5, (h1 - h2) * 0.5],
+        [0, (2 * h1 - h2) * 0.5],
+        [-h1 * 0.5, (h1 - h2) * 0.5]
+      );
     } else {
       p.fill(sideA);
-      p.beginShape();
-      p.vertex(-h2 * 0.5, 0);
-      p.vertex(h2 * 0.5, 0);
-      p.vertex(h1 * 0.5, (h1 - h2) * 0.5);
-      p.vertex(-h1 * 0.5, (h1 - h2) * 0.5);
-      p.endShape(p.CLOSE);
+      polygon(
+        [-h2 * 0.5, 0],
+        [h2 * 0.5, 0],
+        [h1 * 0.5, (h1 - h2) * 0.5],
+        [-h1 * 0.5, (h1 - h2) * 0.5]
+      );
     }
   };
 
@@ -185,12 +188,7 @@ const sketch = (p) => {
     p.scale(size);
 
     p.fill(sideB);
-    p.beginShape();
-    p.vertex(-1, 0);
-    p.vertex(1, 0);
-    p.vertex(h * 0.5, -1 + h * 0.5);
-    p.vertex(-h * 0.5, -1 + h * 0.5);
-    p.endShape(p.CLOSE);
+    polygon([-1, 0], [1, 0], [h * 0.5, -1 + h * 0.5], [-h * 0.5, -1 + h * 0.5]);
 
     p.fill(sideA);
     p.triangle(h * 0.5, -1 + h * 0.5, 0, -1, -h * 0.5, -1 + h * 0.5);
@@ -252,31 +250,71 @@ const sketch = (p) => {
     p.triangle(-1, 0, 0, 1, 1, 0);
   };
 
+  const x = 0.5 * (1 - h2);
+  const y = 0.5 * h1;
+
+  const { polygon1, polygon2, tip } = (() => {
+    const e1 = [1, -1, 0];
+    const e2 = linearEquation(
+      [0, -1 * root2],
+      [-oneMinusTanθ / root2, -oneMinusTanθ / root2]
+    );
+    const e3 = linearEquation(
+      [-0.5 * h2 * root2, (0.5 * h2 - 1) * root2],
+      [0, (h2 - 1) * root2]
+    );
+    const int = intersect(e1, e2).intersection;
+    if (!int) {
+      throw new Error("no intersection");
+    }
+    const int2 = intersect(e3, e2).intersection;
+    if (!int) {
+      throw new Error("no intersection");
+    }
+    const e4 = [0, 1, (1 - h2 + 0.5 * h1) * root2];
+    const int3 = intersect(e4, e3).intersection;
+    if (!int3) {
+      throw new Error("no intersection 3");
+    }
+    const int4 = intersect([1, 0, 0], e4).intersection;
+    if (!int4) {
+      throw new Error("no intersection 4");
+    }
+    const int5 = intersect(e2, [0, -1, (0.5 * h2 - 1) * root2]).intersection;
+    if (!int5) {
+      throw new Error("no intersection 5");
+    }
+    const f = ([x, y]) => [-x, y];
+
+    return {
+      polygon1: [[0, 0], int, int2, int3, int4, f(int3), f(int2), f(int)],
+      polygon2: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
+      tip: [int5, [0, -1 * root2], f(int5)],
+    };
+  })();
+
   let fold2 = (n) => {
     const θ = -n * π;
     p.scale(size / root2);
     p.background(background);
     p.fill(sideB);
-    let x = 0.5 * (1 - h2);
-    let y = 0.5 * h1;
-    p.beginShape();
-    p.vertex(-0.5 * root2, -0.5 * root2);
-    p.vertex(0, 0);
-    p.vertex(0.5 * root2, -0.5 * root2);
-    p.vertex((0.5 - x) * root2, (-0.5 - x) * root2);
-    p.vertex(y * root2, (-1 + h2 - 0.5 * h1) * root2);
-    p.vertex(-y * root2, (-1 + h2 - 0.5 * h1) * root2);
-    p.vertex((-0.5 + x) * root2, (-0.5 - x) * root2);
-    p.endShape(p.CLOSE);
-
+    polygon(
+      [-0.5 * root2, -0.5 * root2],
+      [0, 0],
+      [0.5 * root2, -0.5 * root2],
+      [(0.5 - x) * root2, (-0.5 - x) * root2],
+      [y * root2, (-1 + h2 - 0.5 * h1) * root2],
+      [-y * root2, (-1 + h2 - 0.5 * h1) * root2],
+      [(-0.5 + x) * root2, (-0.5 - x) * root2]
+    );
     p.push();
     p.fill(sideA);
-    p.beginShape();
-    p.vertex((0.5 - x) * root2, (-0.5 - x) * root2);
-    p.vertex(y * root2, (-1 + h2 - 0.5 * h1) * root2);
-    p.vertex(-y * root2, (-1 + h2 - 0.5 * h1) * root2);
-    p.vertex((-0.5 + x) * root2, (-0.5 - x) * root2);
-    p.endShape();
+    polygon(
+      [(0.5 - x) * root2, (-0.5 - x) * root2],
+      [y * root2, (-1 + h2 - 0.5 * h1) * root2],
+      [-y * root2, (-1 + h2 - 0.5 * h1) * root2],
+      [(-0.5 + x) * root2, (-0.5 - x) * root2]
+    );
 
     p.triangle(
       (0.5 - x) * root2,
@@ -326,33 +364,50 @@ const sketch = (p) => {
     while (α < -2 * π) {
       α = α + 2 * π;
     }
-    //    console.log(α, β);
     return α;
   };
 
   let stage4Estimate = 0.0;
 
   let petalFoldv2 = (n) => {
-    //    p.noStroke();
+    p.scale(size / root2);
+
     const β = n * π;
     const α = f(β, stage4Estimate);
     stage4Estimate = α;
 
     p.background(background);
-    p.scale(size / root2);
 
+    p.push();
+    /*    polygon(
+      [-0.5 * root2, -0.5 * root2],
+      [0, 0],
+      [0.5 * root2, -0.5 * root2],
+      [(0.5 - x) * root2, (-0.5 - x) * root2],
+      [y * root2, (-1 + h2 - 0.5 * h1) * root2],
+      [-y * root2, (-1 + h2 - 0.5 * h1) * root2],
+      [(-0.5 + x) * root2, (-0.5 - x) * root2]
+      );
+      */
+    p.pop();
+
+    p.push();
     p.fill(sideB);
+    polygon(...polygon1);
+    p.pop();
+
+    p.fill(sideA);
+    polygon(...polygon2);
+    polygon(...tip);
+
     p.translate(-oneMinusTanθ / root2, -oneMinusTanθ / root2);
     p.rotateZ(π / 4);
 
-    p.line(0, 0, oneMinusTanθ, 0);
     p.fill(sideB);
     p.triangle(0, 0, oneMinusTanθ, 0, c * cos2θ, -c * sin2θ);
-
     p.rotateZ(-2 * θ);
 
     p.fill(sideB);
-    p.triangle(0, 0, c, 0, tanθ, -1);
 
     p.push();
     p.rotateZ(θ - halfPi);
@@ -368,7 +423,7 @@ const sketch = (p) => {
     p.rotateZ(θ - halfPi);
     p.rotateX(β);
     p.fill("pink");
-    p.triangle(0, 0, 1 / cosθ, 0, sinθ * tanθ, -sinθ);
+    //    p.triangle(0, 0, 1 / cosθ, 0, sinθ * tanθ, -sinθ);
   };
 
   let stages = [
@@ -383,8 +438,7 @@ const sketch = (p) => {
     {
       duration: 3.0 * 1000,
       draw: largeValleyFold,
-      },
-      */
+    },
     {
       duration: 3.0 * 1000,
       draw: smallValley1,
@@ -393,6 +447,7 @@ const sketch = (p) => {
       duration: 3.0 * 1000,
       draw: smallValley2,
     },
+      */
     {
       duration: 3.0 * 1000,
       draw: fold2,
