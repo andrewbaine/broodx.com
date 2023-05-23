@@ -272,7 +272,7 @@ const sketch = (p) => {
   const x = 0.5 * (1 - h2);
   const y = 0.5 * h1;
 
-  const { polygon1, polygon2, tip, quad1, petal, t1 } = (() => {
+  const { polygon1, polygon2, tip, quad1, petal, t1, t2 } = (() => {
     const leftEdge = linearEquation(
       [(-1 * root2) / 2, 0],
       [0, (-1 * root2) / 2]
@@ -303,11 +303,8 @@ const sketch = (p) => {
     if (!int4) {
       throw new Error("no intersection 4");
     }
-    const int5 = intersect(e2, [
-      0,
-      -1,
-      ((0.5 * h2 - 1) * root2) / 2,
-    ]).intersection;
+    const h2CreaseLine = [0, 1, ((1 - 0.5 * h2) * root2) / 2];
+    const int5 = intersect(e2, h2CreaseLine).intersection;
     if (!int5) {
       throw new Error("no intersection 5");
     }
@@ -322,6 +319,12 @@ const sketch = (p) => {
     const t1 = [
       int2,
       intersect(e3, leftEdge).intersection,
+      int5,
+      //      [0, (-1 * root2) / 2],
+    ];
+    const t2 = [
+      intersect(e3, leftEdge).intersection,
+      int5,
       [0, (-1 * root2) / 2],
     ];
     const transform = ([x, y]) => {
@@ -337,6 +340,7 @@ const sketch = (p) => {
       tip: [int5, [0, (-1 * root2) / 2], f(int5)],
       quad1: quad.map(transform),
       t1: t1.map(transform),
+      t2: t2.map(transform),
       petal: [
         [0, 0],
         [1 / cosθ, 0],
@@ -480,10 +484,11 @@ const sketch = (p) => {
       p.fill("pink");
       p.triangle(0, 0, 1 / (2 * cosθ), 0, (sinθ * tanθ) / 2, -sinθ / 2);
     } else {
-      p.fill("white");
+      p.fill(sideB);
       polygon(...quad1);
-      p.fill("gray");
+      p.fill(sideA);
       polygon(...t1);
+      polygon(...t2);
     }
 
     p.pop();
