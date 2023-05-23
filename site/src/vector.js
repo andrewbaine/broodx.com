@@ -43,3 +43,4 @@ export const rotate = (v, k, θ) =>
   );
 
 export const rotateX = (v, θ) => rotate(v, [1, 0, 0], θ);
+export const rotateZ = (v, θ) => rotate(v, [0, 0, 1], θ);
