@@ -25,9 +25,6 @@ const tan = Math.tan;
 
 const root2 = Math.sqrt(2);
 
-const height = 600;
-let size = 250;
-
 const unit = (n) => {
   if (n < 0) {
     return 0;
@@ -67,6 +64,29 @@ const sideA = "white";
 const sideB = "lightblue";
 
 const sketch = (p) => {
+  const height = 600;
+  const paperScale = 250;
+
+  const cameraEyeX = 0;
+  const cameraEyeY = 0;
+  const cameraEyeZ = height / 2 / tan(Math.PI / 6);
+  const cameraCoordinates = [cameraEyeY, cameraEyeX, cameraEyeZ].map(
+    (x) => x / paperScale
+  );
+
+  // this function is for unit paper scale
+  const isFacingCamera = ([a, b, c]) => {
+    const v1 = sub(a, b);
+    const v2 = sub(c, b);
+    const interior = mid(mid(a, b), c);
+    const camVector = normalize(sub(cameraCoordinates, interior));
+
+    const normal = cross(v1, v2);
+
+    const d = dot(normal, camVector);
+    return d < 0;
+  };
+
   let triangle = ([a, b], [c, d], [e, f]) => {
     p.triangle(a, b, c, d, e, f);
   };
@@ -79,19 +99,16 @@ const sketch = (p) => {
     p.endShape(p.CLOSE);
   };
 
-  let camera;
-
   const b = ((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ);
 
   const c = (1 - tan(θ)) / (Math.sqrt(2) * sin((3 * π) / 4 - 2 * θ));
   p.setup = function () {
     p.createCanvas(height, height, p.WEBGL);
-    camera = p.createCamera();
-    //    console.log(camera.eyeX, camera.eyeY, camera.eyeZ);
   };
 
   let paper = (n) => {
-    p.scale(size);
+    console.log(paperScale);
+    p.scale(paperScale);
     p.background(background);
     p.fill(sideA);
     polygon(
@@ -104,27 +121,12 @@ const sketch = (p) => {
     );
   };
 
-  const isFacingCamera = ([a, b, c]) => {
-    const v1 = sub(a, b);
-    const v2 = sub(c, b);
-    const interior = mid(mid(a, b), c);
-
-    const normal = cross(v1, v2);
-
-    const camVector = normalize(
-      sub([camera.eyeX, camera.eyeY, camera.eyeZ], interior)
-    );
-
-    const d = dot(normal, camVector);
-    return d < 0;
-  };
-
   const h1 = 0.1;
   const h2 = 0.5;
 
   let smallValley2 = (n) => {
+    p.scale(paperScale);
     p.background(background);
-    p.scale(size);
 
     let h = h2;
     const θ = n * π;
@@ -158,12 +160,12 @@ const sketch = (p) => {
 
     const ifc = isFacingCamera(
       [p1, p2, p3].map((p) => {
+        p = p.map((x) => x / root2);
         let translate = [0.0, 1 - h * 0.5, 0.0];
         let q = add(p, translate);
         let r = rotateX(q, -θ);
         let s = sub(r, translate);
-        let t = scale(s, size);
-        return t;
+        return s;
       })
     );
 
@@ -204,10 +206,10 @@ const sketch = (p) => {
   };
 
   let smallValley1 = (n) => {
+    p.scale(paperScale);
     const h = h1;
     const θ = n * π;
     p.background(background);
-    p.scale(size);
 
     p.fill(sideB);
     polygon(
@@ -235,12 +237,12 @@ const sketch = (p) => {
 
     const ifc = isFacingCamera(
       [p1, p2, p3].map((p) => {
+        p = p.map((x) => x / root2);
         let translate = [0.0, 1 - h * 0.5, 0.0];
         let q = add(p, translate);
         let r = rotateX(q, -θ);
         let s = sub(r, translate);
-        let t = scale(s, size);
-        return t;
+        return s;
       })
     );
 
@@ -251,14 +253,14 @@ const sketch = (p) => {
   };
 
   let largeValleyFold = (n) => {
+    p.scale(paperScale);
     const θ = n * π;
 
-    const a = scale([-1, 0, 0], size);
-    const b = scale([0, cos(θ), sin(θ)], size);
-    const c = scale([1, 0, 0], size);
+    const a = scale([-1, 0, 0], 1 / root2);
+    const b = scale([0, cos(θ), sin(θ)], 1 / root2);
+    const c = scale([1, 0, 0], 1 / root2);
     const ifc = isFacingCamera([a, b, c]);
 
-    p.scale(size);
     p.background(background);
 
     p.fill(sideA);
@@ -349,17 +351,9 @@ const sketch = (p) => {
     };
   })();
 
-  const p2 = petal.map(([x, y]) => {
-    const v = [x, y, 0];
-    const [xr, yr, zr] = rotateZ(v, -θ - π / 4);
-    let tx = xr - oneMinusTanθ / root2;
-    let ty = yr - oneMinusTanθ / root2;
-    return [(tx * size) / root2, (ty * size) / root2];
-  });
-
   let fold2 = (n) => {
+    p.scale(paperScale);
     const θ = -n * π;
-    p.scale(size);
     p.background(background);
     p.fill(sideB);
     polygon(
@@ -434,13 +428,22 @@ const sketch = (p) => {
   let stage4Estimate = 0.0;
 
   let petalFoldv2 = (n) => {
-    p.scale(size);
+    p.scale(paperScale);
 
     const β = n * π;
     const α = f(β, stage4Estimate);
     stage4Estimate = α;
 
     p.background(background);
+
+    const wing2 = [
+      [(-0.5 * root2) / 2, (-0.5 * root2) / 2],
+      [-(0.5 * oneMinusTanθ * root2) / 2, -(0.5 * oneMinusTanθ * root2) / 2],
+      [0, (-1 * root2) / 2],
+    ].map((p) => {
+      return p;
+    });
+    p.triangle(...wing2[0], ...wing2[1], ...wing2[2]);
 
     p.push();
     /*    polygon(
@@ -459,11 +462,6 @@ const sketch = (p) => {
     p.fill(sideB);
     polygon(...polygon1);
     p.pop();
-
-    p.fill("pink");
-    for (const [x, y] of p2) {
-      p.circle(x, y, 0.1);
-    }
 
     p.fill(sideA);
     polygon(...polygon2);
@@ -500,31 +498,37 @@ const sketch = (p) => {
 
     p.rotateZ(θ - halfPi);
     p.rotateX(β);
-    p.fill("pink");
+
+    if (isFacingCamera(wing2)) {
+      p.fill("pink");
+    } else {
+      p.fill("white");
+    }
+
     p.triangle(0, 0, 1 / (2 * cosθ), 0, (sinθ * tanθ) / 2, -sinθ / 2);
   };
 
   let stages = [
     /*
+     */
     {
       duration: 0,
       draw: () => {},
     },
     {
-      duration: 3.0 * 1000,
+      duration: 0.3 * 1000,
       draw: paper,
     },
     {
-      duration: 3.0 * 1000,
+      duration: 0.5 * 1000,
       draw: largeValleyFold,
     },
     {
-      duration: 3.0 * 1000,
+      duration: 1.0 * 1000,
       draw: smallValley1,
     },
-      */
     {
-      duration: 3.0 * 1000,
+      duration: 1.0 * 1000,
       draw: smallValley2,
     },
     {
@@ -533,7 +537,7 @@ const sketch = (p) => {
     },
 
     {
-      duration: 3 * 1000,
+      duration: 10 * 1000,
       draw: petalFoldv2,
     },
   ];
@@ -559,44 +563,6 @@ const sketch = (p) => {
       let n = (t - currentStage.startTime) / currentStage.duration;
       currentStage.draw(n);
     }
-  };
-};
-
-const crease = ({ background, height, light }) => {
-  const a = [0, 0];
-  const b = [1, 0];
-  const c = [1, 1];
-  const d = [0, 1];
-
-  const top = linearEquation(a, b);
-  const right = linearEquation(b, c);
-  const bottom = linearEquation(c, d);
-  const left = linearEquation(d, a);
-
-  const e = intersect(
-    [1, 0, -0.5],
-    linearEquation([0, 0], [1, tanθ])
-  ).intersection;
-
-  const center = mid(mid(a, c), mid(b, d));
-
-  let camera;
-
-  return (p) => {
-    const line = ([a, b], [c, d]) => p.line(a, b, c, d);
-    p.setup = function () {
-      p.createCanvas(height, height, p.WEBGL);
-      camera = p.createCamera();
-    };
-    p.draw = function () {
-      p.background(background);
-      p.scale((height * 2) / 3);
-      p.translate(-0.5, -0.5);
-      p.fill(light);
-      p.rect(0, 0, 1, 1);
-      line(a, e);
-      line(e, b);
-    };
   };
 };
 
