@@ -36,7 +36,9 @@ const unit = (n) => {
 };
 
 const judgments = {
-  θ: π / 10,
+  θ: π / 12,
+  h1: 0.1,
+  h2: 0.8,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -121,8 +123,8 @@ const sketch = (p) => {
     );
   };
 
-  const h1 = 0.1;
-  const h2 = 0.5;
+  const h1 = judgments.h1;
+  const h2 = judgments.h2;
 
   let smallValley2 = (n) => {
     p.scale(paperScale);
@@ -427,6 +429,22 @@ const sketch = (p) => {
 
   let stage4Estimate = 0.0;
 
+  let wings = (α, β) => {
+    const dist = (0.5 * oneMinusTanθ * root2) / 2;
+    const a = [-dist, -dist, 0];
+    const b = [(-0.5 * root2) / 2, (-0.5 * root2) / 2, 0];
+    const c = [0, (-1 * root2) / 2, 0];
+    const k = normalize(sub(c, a));
+    const wing1 = [a, b, c].map((p) => {
+      let q = add(p, [dist, dist, 0]);
+      let r = rotate(q, k, -1 * β);
+      let s = add(r, [-dist, -dist, 0]);
+      return s;
+    });
+    const wing2 = [a, b, c].map((p) => {});
+    return [wing1];
+  };
+
   let petalFoldv2 = (n) => {
     p.scale(paperScale);
 
@@ -435,15 +453,6 @@ const sketch = (p) => {
     stage4Estimate = α;
 
     p.background(background);
-
-    const wing2 = [
-      [(-0.5 * root2) / 2, (-0.5 * root2) / 2],
-      [-(0.5 * oneMinusTanθ * root2) / 2, -(0.5 * oneMinusTanθ * root2) / 2],
-      [0, (-1 * root2) / 2],
-    ].map((p) => {
-      return p;
-    });
-    p.triangle(...wing2[0], ...wing2[1], ...wing2[2]);
 
     p.push();
     /*    polygon(
@@ -467,45 +476,70 @@ const sketch = (p) => {
     polygon(...polygon2);
     polygon(...tip);
 
-    p.translate(-oneMinusTanθ / (2 * root2), -oneMinusTanθ / (2 * root2));
-    p.rotateZ(π / 4);
+    for (const x of [-1, 1]) {
+      p.push();
+      p.translate(
+        (x * oneMinusTanθ) / (2 * root2),
+        -oneMinusTanθ / (2 * root2)
+      );
+      p.rotateZ((x * -1 * π) / 4);
 
-    p.fill(sideB);
-    p.triangle(0, 0, oneMinusTanθ / 2, 0, (c * cos2θ) / 2, (-c * sin2θ) / 2);
-
-    p.push();
-
-    const ifc = false;
-    p.rotateZ(-θ - halfPi);
-    p.rotateX(-1 * β);
-    if (ifc) {
-      p.fill("pink");
-      p.triangle(0, 0, 1 / (2 * cosθ), 0, (sinθ * tanθ) / 2, -sinθ / 2);
-    } else {
       p.fill(sideB);
-      polygon(...quad1);
-      p.fill(sideA);
-      polygon(...t1);
-      polygon(...t2);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * oneMinusTanθ) / 2,
+        0,
+        (x * -1 * (c * cos2θ)) / 2,
+        (-c * sin2θ) / 2
+      );
+
+      p.push();
+
+      let [wing1] = wings(α, β);
+      const ifc = isFacingCamera(wing1);
+      p.rotateZ(x * (θ + halfPi));
+      p.rotateX(-β);
+      let m = ([a, b]) => [a * -1 * x, b];
+      if (ifc) {
+        p.fill(sideB);
+        polygon(...quad1.map(m));
+        p.fill(sideA);
+        polygon(...t1.map(m));
+        polygon(...t2.map(m));
+      } else {
+        p.fill(sideB);
+        p.triangle(
+          0,
+          0,
+          (x * -1 * 1) / (2 * cosθ),
+          0,
+          (x * -1 * (sinθ * tanθ)) / 2,
+          -sinθ / 2
+        );
+      }
+
+      p.pop();
+      p.rotateZ(x * 2 * θ);
+
+      p.rotateX(-1 * (π - α));
+      p.fill(sideB);
+      p.triangle(0, 0, (x * -1 * c) / 2, 0, (x * -1 * tanθ) / 2, -1 / 2);
+
+      p.rotateZ(x * -1 * (θ - halfPi));
+      p.rotateX(β);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * 1) / (2 * cosθ),
+        0,
+        (x * -1 * (sinθ * tanθ)) / 2,
+        -sinθ / 2
+      );
+      p.pop();
     }
-
-    p.pop();
-    p.rotateZ(-2 * θ);
-
-    p.rotateX(-1 * (π - α));
-    p.fill("lightyellow");
-    p.triangle(0, 0, c / 2, 0, tanθ / 2, -1 / 2);
-
-    p.rotateZ(θ - halfPi);
-    p.rotateX(β);
-
-    if (isFacingCamera(wing2)) {
-      p.fill("pink");
-    } else {
-      p.fill("white");
-    }
-
-    p.triangle(0, 0, 1 / (2 * cosθ), 0, (sinθ * tanθ) / 2, -sinθ / 2);
   };
 
   let stages = [
@@ -516,28 +550,28 @@ const sketch = (p) => {
       draw: () => {},
     },
     {
-      duration: 0.3 * 1000,
+      duration: 0.1 * 1000,
       draw: paper,
     },
     {
-      duration: 0.5 * 1000,
+      duration: 0.1 * 1000,
       draw: largeValleyFold,
     },
     {
-      duration: 1.0 * 1000,
+      duration: 0.1 * 1000,
       draw: smallValley1,
     },
     {
-      duration: 1.0 * 1000,
+      duration: 0.1 * 1000,
       draw: smallValley2,
     },
     {
-      duration: 3.0 * 1000,
+      duration: 0.5 * 1000,
       draw: fold2,
     },
 
     {
-      duration: 10 * 1000,
+      duration: 10.0 * 1000,
       draw: petalFoldv2,
     },
   ];
