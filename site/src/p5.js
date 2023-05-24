@@ -39,6 +39,7 @@ const judgments = {
   θ: π / 12,
   h1: 0.1,
   h2: 0.8,
+  h3: 0.7,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -109,7 +110,6 @@ const sketch = (p) => {
   };
 
   let paper = (n) => {
-    console.log(paperScale);
     p.scale(paperScale);
     p.background(background);
     p.fill(sideA);
@@ -125,6 +125,7 @@ const sketch = (p) => {
 
   const h1 = judgments.h1;
   const h2 = judgments.h2;
+  const h3 = judgments.h3;
 
   let smallValley2 = (n) => {
     p.scale(paperScale);
@@ -207,6 +208,95 @@ const sketch = (p) => {
     }
   };
 
+  let smallValley3 = (n) => {
+    const α = 0.0;
+    const β = π;
+    p.scale(paperScale);
+    p.background(background);
+    p.push();
+    p.fill(sideB);
+    polygon(...polygon1);
+
+    p.fill(sideA);
+    polygon(...polygon2);
+    polygon(...tip);
+
+    for (const x of [-1, 1]) {
+      p.push();
+      p.translate(
+        (x * oneMinusTanθ) / (2 * root2),
+        -oneMinusTanθ / (2 * root2)
+      );
+      p.rotateZ((x * -1 * π) / 4);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * oneMinusTanθ) / 2,
+        0,
+        (x * -1 * (c * cos2θ)) / 2,
+        (-c * sin2θ) / 2
+      );
+
+      p.push();
+
+      let [wing1] = wings(α, β);
+      const ifc = isFacingCamera(wing1);
+      p.rotateZ(x * (θ + halfPi));
+      p.rotateX(-β);
+      let m = ([a, b]) => [a * -1 * x, b];
+      if (ifc) {
+        p.fill(sideB);
+        polygon(...quad1.map(m));
+        p.fill(sideA);
+        polygon(...t1.map(m));
+        polygon(...t2.map(m));
+      } else {
+        p.fill(sideB);
+        p.triangle(
+          0,
+          0,
+          (x * -1 * 1) / (2 * cosθ),
+          0,
+          (x * -1 * (sinθ * tanθ)) / 2,
+          -sinθ / 2
+        );
+      }
+
+      p.pop();
+      p.rotateZ(x * 2 * θ);
+
+      p.rotateX(-1 * (π - α));
+      p.fill(sideB);
+      p.triangle(0, 0, (x * -1 * c) / 2, 0, (x * -1 * tanθ) / 2, -1 / 2);
+
+      p.rotateZ(x * -1 * (θ - halfPi));
+      p.rotateX(β);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * 1) / (2 * cosθ),
+        0,
+        (x * -1 * (sinθ * tanθ)) / 2,
+        -sinθ / 2
+      );
+      p.pop();
+    }
+
+    p.pop();
+
+    p.fill("gray");
+    triangle(...tips.a);
+
+    p.fill("pink");
+    triangle(...tips.b);
+    p.fill("gray");
+    triangle(...tips.c);
+  };
+
   let smallValley1 = (n) => {
     p.scale(paperScale);
     const h = h1;
@@ -276,11 +366,12 @@ const sketch = (p) => {
   const x = 0.5 * (1 - h2);
   const y = 0.5 * h1;
 
-  const { polygon1, polygon2, tip, quad1, petal, t1, t2 } = (() => {
+  const { polygon1, polygon2, tip, quad1, petal, t1, t2, tips } = (() => {
     const leftEdge = linearEquation(
       [(-1 * root2) / 2, 0],
       [0, (-1 * root2) / 2]
     );
+    // y = x
     const e1 = [1, -1, 0];
     const e2 = linearEquation(
       [0, (-1 * root2) / 2],
@@ -299,6 +390,15 @@ const sketch = (p) => {
       throw new Error("no intersection");
     }
     const e4 = [0, 1, ((1 - h2 + 0.5 * h1) * root2) / 2];
+    const e5 = linearEquation(
+      [0, -root2 / 2],
+      [-tan(π / 4 - 2 * θ) / root2, 0]
+    );
+    console.log("e5", e5);
+
+    const h3CreaseLine = [0, 1, ((1 - 0.5 * h3) * root2) / 2];
+    const int6 = intersect(e5, h3CreaseLine).intersection;
+    const int7 = intersect(e2, h3CreaseLine).intersection;
     const int3 = intersect(e4, e3).intersection;
     if (!int3) {
       throw new Error("no intersection 3");
@@ -320,12 +420,7 @@ const sketch = (p) => {
       int2,
       int,
     ];
-    const t1 = [
-      int2,
-      intersect(e3, leftEdge).intersection,
-      int5,
-      //      [0, (-1 * root2) / 2],
-    ];
+    const t1 = [int2, intersect(e3, leftEdge).intersection, int5];
     const t2 = [
       intersect(e3, leftEdge).intersection,
       int5,
@@ -338,10 +433,16 @@ const sketch = (p) => {
       let [xx, yy, zz] = rotateZ(v, θ + π / 4);
       return [xx, yy];
     };
+    const tippyTop = [0, -root2 / 2];
+    const tips = {
+      a: [int6, int7, tippyTop],
+      b: [int6, tippyTop, f(int6)],
+      c: [f(int6), f(int7), f(tippyTop)],
+    };
     return {
       polygon1: [[0, 0], int, int2, int3, int4, f(int3), f(int2), f(int)],
       polygon2: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
-      tip: [int5, [0, (-1 * root2) / 2], f(int5)],
+      tip: [int5, tippyTop, f(int5)],
       quad1: quad.map(transform),
       t1: t1.map(transform),
       t2: t2.map(transform),
@@ -350,9 +451,9 @@ const sketch = (p) => {
         [1 / cosθ, 0],
         [sinθ * tanθ, -sinθ],
       ],
+      tips,
     };
   })();
-
   let fold2 = (n) => {
     p.scale(paperScale);
     const θ = -n * π;
@@ -429,7 +530,7 @@ const sketch = (p) => {
 
   let stage4Estimate = 0.0;
 
-  let wings = (α, β) => {
+  const wings = (α, β) => {
     const dist = (0.5 * oneMinusTanθ * root2) / 2;
     const a = [-dist, -dist, 0];
     const b = [(-0.5 * root2) / 2, (-0.5 * root2) / 2, 0];
@@ -453,19 +554,6 @@ const sketch = (p) => {
     stage4Estimate = α;
 
     p.background(background);
-
-    p.push();
-    /*    polygon(
-      [-0.5 * root2, -0.5 * root2],
-      [0, 0],
-      [0.5 * root2, -0.5 * root2],
-      [(0.5 - x) * root2, (-0.5 - x) * root2],
-      [y * root2, (-1 + h2 - 0.5 * h1) * root2],
-      [-y * root2, (-1 + h2 - 0.5 * h1) * root2],
-      [(-0.5 + x) * root2, (-0.5 - x) * root2]
-      );
-      */
-    p.pop();
 
     p.push();
     p.fill(sideB);
@@ -571,8 +659,12 @@ const sketch = (p) => {
     },
 
     {
-      duration: 10.0 * 1000,
+      duration: 1.0 * 1000,
       draw: petalFoldv2,
+    },
+    {
+      duration: 2 * 1000,
+      draw: smallValley3,
     },
   ];
   let t = 0;
