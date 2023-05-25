@@ -254,14 +254,15 @@ const sketch = (p) => {
         polygon(...t2.map(m));
       } else {
         p.fill(sideB);
-        p.triangle(
+        /*        p.triangle(
           0,
           0,
           (x * -1 * 1) / (2 * cosθ),
           0,
           (x * -1 * (sinθ * tanθ)) / 2,
           -sinθ / 2
-        );
+          );
+          */
       }
 
       p.pop();
@@ -288,13 +289,24 @@ const sketch = (p) => {
 
     p.pop();
 
-    p.fill("gray");
-    triangle(...tips.a);
-
     p.fill("pink");
-    triangle(...tips.b);
-    p.fill("gray");
-    triangle(...tips.c);
+    //    p.circle(int8[0], int8[1], 0.1);
+    polygon(...toops.a);
+
+    const ty = ((1 - 0.5 * h3) * root2) / 2;
+    p.translate(0, -ty);
+    p.rotateX(-n * π);
+
+    p.fill(sideB);
+    const t = ([x, y]) => {
+      return [x, y + ty];
+    };
+    triangle(...tips.a.map(t));
+
+    p.fill(sideA);
+    triangle(...tips.b.map(t));
+    p.fill(sideB);
+    triangle(...tips.c.map(t));
   };
 
   let smallValley1 = (n) => {
@@ -366,7 +378,19 @@ const sketch = (p) => {
   const x = 0.5 * (1 - h2);
   const y = 0.5 * h1;
 
-  const { polygon1, polygon2, tip, quad1, petal, t1, t2, tips } = (() => {
+  const {
+    polygon1,
+    polygon2,
+    polygon3,
+    tip,
+    quad1,
+    petal,
+    t1,
+    t2,
+    tips,
+    toops,
+    int8,
+  } = (() => {
     const leftEdge = linearEquation(
       [(-1 * root2) / 2, 0],
       [0, (-1 * root2) / 2]
@@ -394,7 +418,11 @@ const sketch = (p) => {
       [0, -root2 / 2],
       [-tan(π / 4 - 2 * θ) / root2, 0]
     );
-    console.log("e5", e5);
+
+    const e6 = linearEquation(
+      [0, -((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ) / 2],
+      [-oneMinusTanθ / (root2 * 2), -oneMinusTanθ / (root2 * 2)]
+    );
 
     const h3CreaseLine = [0, 1, ((1 - 0.5 * h3) * root2) / 2];
     const int6 = intersect(e5, h3CreaseLine).intersection;
@@ -439,9 +467,19 @@ const sketch = (p) => {
       b: [int6, tippyTop, f(int6)],
       c: [f(int6), f(int7), f(tippyTop)],
     };
+    const int8 = intersect(e6, e5).intersection;
+    const toops = {
+      a: [
+        int6,
+        int7,
+        [-oneMinusTanθ / (2 * root2), -oneMinusTanθ / (2 * root2)],
+        int8,
+      ],
+    };
     return {
       polygon1: [[0, 0], int, int2, int3, int4, f(int3), f(int2), f(int)],
       polygon2: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
+      polygon3: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
       tip: [int5, tippyTop, f(int5)],
       quad1: quad.map(transform),
       t1: t1.map(transform),
@@ -452,6 +490,8 @@ const sketch = (p) => {
         [sinθ * tanθ, -sinθ],
       ],
       tips,
+      toops,
+      int8,
     };
   })();
   let fold2 = (n) => {
