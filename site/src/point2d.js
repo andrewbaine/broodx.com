@@ -36,3 +36,7 @@ export const intersect = (e1, e2) => {
     };
   }
 };
+
+export const ccw = ([ax, ay], [bx, by], [cx, cy]) => {
+  return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax);
+};

@@ -1,4 +1,4 @@
-import { linearEquation, intersect } from "../src/point2d.js";
+import { ccw, linearEquation, intersect } from "../src/point2d.js";
 import tap from "tap";
 
 let sameLinearEquation = (e1, e2, tolerance, t) => {
@@ -91,3 +91,6 @@ tap.test("intersections", (t) => {
   }
   t.end();
 });
+
+tap.ok(ccw([0, 0], [1, 0], [0, 1]));
+tap.false(ccw([0, 0], [0, 1], [1, 0]));

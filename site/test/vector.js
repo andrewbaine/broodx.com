@@ -10,11 +10,14 @@ import {
   normalize,
   rotate,
   rotateX,
+  rotateZ,
   scale,
   sub,
   sum,
   distance,
 } from "../src/vector.js";
+
+// https://www.vcalc.com/wiki/vector-rotation
 
 const π = Math.PI;
 const cos = Math.cos;
@@ -136,4 +139,9 @@ tap.same(add([0, 1, 2], [-1, -2, -4]), [-1, -1, -2]);
 tap.same(
   rotateX([1, 2, 3], π / 4),
   [1, -0.7071067811865472, 3.5355339059327378]
+);
+
+tap.same(
+  rotateZ([1, 2, 3], π / 6),
+  [-0.13397459621556118, 2.232050807568877, 3]
 );
