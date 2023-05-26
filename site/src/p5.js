@@ -437,8 +437,20 @@ const sketch = (p) => {
     triangle(...tips.c.map(t));
     */
     let tips2Polys = tips2.polygons.map((x) => x.map(t));
-    p.fill("black");
+    p.fill(sideB);
     polygon(...tips2Polys[0]);
+
+    let t2 = ((h4 - h3) * 0.5) / root2;
+    p.translate(0, t2);
+    p.rotateX(n * π);
+    p.translate(0, -t2);
+
+    p.fill(sideB);
+    triangle(...tips2.triangles.a.map(t));
+    p.fill(sideA);
+    triangle(...tips2.triangles.b.map(t));
+    p.fill(sideB);
+    triangle(...tips2.triangles.c.map(t));
     p.pop();
   };
 
@@ -532,14 +544,16 @@ const sketch = (p) => {
     const c = intersect(e5, h4CreaseLine).intersection;
     const d = intersect(e2, h4CreaseLine).intersection;
     const f = ([x, y]) => [-x, y];
-    console.log(a, b, c, d);
-    const polygons = [
-      [a, b, c, d],
-      [b, f(b), f(c), c],
-      [f(a), f(b), f(c), f(d)],
-    ];
+    const polygons = [[a, d, f(d), f(a)]];
+    console.log(polygons[0]);
     return {
       polygons,
+      triangles: {
+        a: [c, d, tip],
+        b: [c, f(c), tip],
+        c: [f(c), f(d), tip],
+        d: [d, f(d), tip],
+      },
     };
   })();
 
@@ -871,7 +885,7 @@ const sketch = (p) => {
       draw: petalFoldv2,
     },
     {
-      duration: 10 * 1000,
+      duration: 1 * 1000,
       draw: smallValley3,
     },
     {
