@@ -471,6 +471,149 @@ const sketch = (p) => {
     }
   };
 
+  const smallMountain1 = (n) => {
+    const α = 0.0;
+    const β = π;
+    p.scale(paperScale);
+    p.background(background);
+    p.push();
+    p.fill(sideB);
+    polygon(...polygon1);
+
+    p.fill(sideA);
+    polygon(...polygon2);
+    p.fill(sideA);
+    polygon(...polygon3);
+
+    for (const x of [-1, 1]) {
+      p.push();
+      p.translate(
+        (x * oneMinusTanθ) / (2 * root2),
+        -oneMinusTanθ / (2 * root2)
+      );
+      p.rotateZ((x * -1 * π) / 4);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * oneMinusTanθ) / 2,
+        0,
+        (x * -1 * (c * cos2θ)) / 2,
+        (-c * sin2θ) / 2
+      );
+
+      p.push();
+
+      let wing1 = wings(α, β);
+      const ifc = isFacingCamera(wing1);
+      p.rotateZ(x * (θ + halfPi));
+      p.rotateX(-β);
+      let m = ([a, b]) => [a * -1 * x, b];
+      if (ifc) {
+        p.fill(sideB);
+        polygon(...quad1.map(m));
+        p.fill(sideA);
+        polygon(...t1.map(m));
+        polygon(...t2.map(m));
+      } else {
+        p.fill(sideB);
+        /*        p.triangle(
+          0,
+          0,
+          (x * -1 * 1) / (2 * cosθ),
+          0,
+          (x * -1 * (sinθ * tanθ)) / 2,
+          -sinθ / 2
+          );
+          */
+      }
+
+      p.pop();
+      p.rotateZ(x * 2 * θ);
+
+      p.rotateX(-1 * (π - α));
+      p.fill(sideB);
+      p.triangle(0, 0, (x * -1 * c) / 2, 0, (x * -1 * tanθ) / 2, -1 / 2);
+
+      p.rotateZ(x * -1 * (θ - halfPi));
+      p.rotateX(β);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * 1) / (2 * cosθ),
+        0,
+        (x * -1 * (sinθ * tanθ)) / 2,
+        -sinθ / 2
+      );
+      p.pop();
+    }
+
+    p.pop();
+
+    p.fill(sideB);
+    polygon(...toops.a);
+    polygon(...toops.b);
+
+    const ty = ((1 - 0.5 * h3) * root2) / 2;
+    p.translate(0, -ty);
+
+    p.push();
+
+    p.rotateX(-π);
+
+    p.fill(sideB);
+    const t = ([x, y]) => {
+      return [x, y + ty];
+    };
+
+    let tips2Polys = tips2.polygons.map((x) => x.map(t));
+    p.fill(sideB);
+    polygon(...tips2Polys[0]);
+
+    let t2 = ((h4 - h3) * 0.5) / root2;
+    p.translate(0, t2);
+    p.rotateX(π);
+    p.translate(0, -t2);
+
+    p.fill(sideB);
+    polygon(...tips2.polygons2.a.map(t));
+    p.fill(sideA);
+    polygon(...tips2.polygons2.b.map(t));
+    p.fill(sideB);
+    polygon(...tips2.polygons2.c.map(t));
+
+    let t3 = (2 * (h4 - h3) * 0.5) / root2;
+    p.translate(0, t3);
+    p.rotateX(n * π);
+    p.translate(0, -t3);
+
+    const ifc = isFacingCamera(
+      [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+      ].map(([x, y]) => {
+        const ty = (-1 + 0.5 * h3) / root2;
+        let q = rotateX([x, y, 0], n * π);
+        let r = add(q, [0, ty, 0]);
+        return r;
+      })
+    );
+
+    if (!ifc) {
+      p.fill(sideB);
+      triangle(...tips2.triangles2.a.map(t));
+      p.fill(sideA);
+      triangle(...tips2.triangles2.b.map(t));
+      p.fill(sideB);
+      triangle(...tips2.triangles2.c.map(t));
+      p.pop();
+    }
+  };
+
   let smallValley1 = (n) => {
     p.scale(paperScale);
     const h = h1;
@@ -540,6 +683,26 @@ const sketch = (p) => {
   const x = 0.5 * (1 - h2);
   const y = 0.5 * h1;
 
+  const tips3 = (() => {
+    const tip = [0, -root2 / 2];
+    const e2 = linearEquation(tip, [
+      -oneMinusTanθ / (root2 * 2),
+      -oneMinusTanθ / (root2 * 2),
+    ]);
+
+    const e5 = linearEquation(tip, [-tan(π / 4 - 2 * θ) / root2, 0]);
+
+    const h4CreaseLine = [0, 1, ((1 - 0.5 * h4) * root2) / 2];
+
+    /*
+    const polygons = {
+      a: [a, b, c, d],
+      b: [b, c, f(c), f(b)],
+      c: [f(a), f(b), f(c), f(d)],
+      };
+      */
+  })();
+
   const tips2 = (() => {
     const e2 = linearEquation(
       [0, (-1 * root2) / 2],
@@ -553,6 +716,7 @@ const sketch = (p) => {
 
     const h3CreaseLine = [0, 1, ((1 - 0.5 * h3) * root2) / 2];
     const h4CreaseLine = [0, 1, ((1 - 0.5 * h4) * root2) / 2];
+    const h5CreaseLine = [0, 1, ((1 - 0.5 * (2 * h4 - h3)) * root2) / 2];
 
     const tip = [0, -root2 / 2];
 
@@ -560,6 +724,12 @@ const sketch = (p) => {
     const b = intersect(e5, h3CreaseLine).intersection;
     const c = intersect(e5, h4CreaseLine).intersection;
     const d = intersect(e2, h4CreaseLine).intersection;
+
+    const m = intersect(e2, h5CreaseLine).intersection;
+    const n = intersect(e5, h5CreaseLine).intersection;
+
+    console.log({ m, n });
+
     const f = ([x, y]) => [-x, y];
     const polygons = [[a, d, f(d), f(a)]];
     console.log(polygons[0]);
@@ -570,6 +740,16 @@ const sketch = (p) => {
         b: [c, f(c), tip],
         c: [f(c), f(d), tip],
         d: [d, f(d), tip],
+      },
+      polygons2: {
+        a: [c, d, m, n],
+        b: [c, n, f(n), f(c)],
+        c: [f(c), f(d), f(m), f(n)],
+      },
+      triangles2: {
+        a: [m, n, tip],
+        b: [n, f(n), tip],
+        c: [f(m), f(n), tip],
       },
     };
   })();
@@ -908,6 +1088,10 @@ const sketch = (p) => {
     {
       duration: 1 * 1000,
       draw: smallValley4,
+    },
+    {
+      duration: 15 * 1000,
+      draw: smallMountain1,
     },
   ];
   let t = 0;
