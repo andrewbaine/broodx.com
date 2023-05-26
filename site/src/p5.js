@@ -40,6 +40,7 @@ const judgments = {
   h1: 0.1,
   h2: 0.8,
   h3: 0.7,
+  h4: 0.4,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -68,7 +69,7 @@ const sideB = "lightblue";
 
 const sketch = (p) => {
   const height = 600;
-  const paperScale = 250;
+  const paperScale = 400;
 
   const cameraEyeX = 0;
   const cameraEyeY = 0;
@@ -126,6 +127,7 @@ const sketch = (p) => {
   const h1 = judgments.h1;
   const h2 = judgments.h2;
   const h3 = judgments.h3;
+  const h4 = judgments.h4;
 
   let smallValley2 = (n) => {
     p.scale(paperScale);
@@ -219,7 +221,8 @@ const sketch = (p) => {
 
     p.fill(sideA);
     polygon(...polygon2);
-    polygon(...tip);
+    p.fill(sideA);
+    polygon(...polygon3);
 
     for (const x of [-1, 1]) {
       p.push();
@@ -241,7 +244,7 @@ const sketch = (p) => {
 
       p.push();
 
-      let [wing1] = wings(α, β);
+      let wing1 = wings(α, β);
       const ifc = isFacingCamera(wing1);
       p.rotateZ(x * (θ + halfPi));
       p.rotateX(-β);
@@ -289,24 +292,140 @@ const sketch = (p) => {
 
     p.pop();
 
-    p.fill("pink");
-    //    p.circle(int8[0], int8[1], 0.1);
+    p.fill(sideB);
     polygon(...toops.a);
+    polygon(...toops.b);
 
     const ty = ((1 - 0.5 * h3) * root2) / 2;
     p.translate(0, -ty);
     p.rotateX(-n * π);
 
+    const ifc = false;
+    const t = ([x, y]) => {
+      return [x, y + ty];
+    };
+    if (ifc) {
+      p.fill(sideB);
+      triangle(...tips.a.map(t));
+      p.fill(sideA);
+      triangle(...tips.b.map(t));
+      p.fill(sideB);
+      triangle(...tips.c.map(t));
+    } else {
+      p.fill(sideB);
+      triangle(...tips.b.map(t));
+    }
+  };
+
+  const smallValley4 = (n) => {
+    const α = 0.0;
+    const β = π;
+    p.scale(paperScale);
+    p.background(background);
+    p.push();
+    p.fill(sideB);
+    polygon(...polygon1);
+
+    p.fill(sideA);
+    polygon(...polygon2);
+    p.fill(sideA);
+    polygon(...polygon3);
+
+    for (const x of [-1, 1]) {
+      p.push();
+      p.translate(
+        (x * oneMinusTanθ) / (2 * root2),
+        -oneMinusTanθ / (2 * root2)
+      );
+      p.rotateZ((x * -1 * π) / 4);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * oneMinusTanθ) / 2,
+        0,
+        (x * -1 * (c * cos2θ)) / 2,
+        (-c * sin2θ) / 2
+      );
+
+      p.push();
+
+      let wing1 = wings(α, β);
+      const ifc = isFacingCamera(wing1);
+      p.rotateZ(x * (θ + halfPi));
+      p.rotateX(-β);
+      let m = ([a, b]) => [a * -1 * x, b];
+      if (ifc) {
+        p.fill(sideB);
+        polygon(...quad1.map(m));
+        p.fill(sideA);
+        polygon(...t1.map(m));
+        polygon(...t2.map(m));
+      } else {
+        p.fill(sideB);
+        /*        p.triangle(
+          0,
+          0,
+          (x * -1 * 1) / (2 * cosθ),
+          0,
+          (x * -1 * (sinθ * tanθ)) / 2,
+          -sinθ / 2
+          );
+          */
+      }
+
+      p.pop();
+      p.rotateZ(x * 2 * θ);
+
+      p.rotateX(-1 * (π - α));
+      p.fill(sideB);
+      p.triangle(0, 0, (x * -1 * c) / 2, 0, (x * -1 * tanθ) / 2, -1 / 2);
+
+      p.rotateZ(x * -1 * (θ - halfPi));
+      p.rotateX(β);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * 1) / (2 * cosθ),
+        0,
+        (x * -1 * (sinθ * tanθ)) / 2,
+        -sinθ / 2
+      );
+      p.pop();
+    }
+
+    p.pop();
+
+    p.fill(sideB);
+    polygon(...toops.a);
+    polygon(...toops.b);
+
+    const ty = ((1 - 0.5 * h3) * root2) / 2;
+    p.translate(0, -ty);
+
+    p.push();
+
+    p.rotateX(-π);
+
     p.fill(sideB);
     const t = ([x, y]) => {
       return [x, y + ty];
     };
+    /*
+      
     triangle(...tips.a.map(t));
-
     p.fill(sideA);
     triangle(...tips.b.map(t));
     p.fill(sideB);
     triangle(...tips.c.map(t));
+    */
+    let tips2Polys = tips2.polygons.map((x) => x.map(t));
+    p.fill("black");
+    polygon(...tips2Polys[0]);
+    p.pop();
   };
 
   let smallValley1 = (n) => {
@@ -377,6 +496,38 @@ const sketch = (p) => {
 
   const x = 0.5 * (1 - h2);
   const y = 0.5 * h1;
+
+  const tips2 = (() => {
+    const e2 = linearEquation(
+      [0, (-1 * root2) / 2],
+      [-oneMinusTanθ / (root2 * 2), -oneMinusTanθ / (root2 * 2)]
+    );
+
+    const e5 = linearEquation(
+      [0, -root2 / 2],
+      [-tan(π / 4 - 2 * θ) / root2, 0]
+    );
+
+    const h3CreaseLine = [0, 1, ((1 - 0.5 * h3) * root2) / 2];
+    const h4CreaseLine = [0, 1, ((1 - 0.5 * h4) * root2) / 2];
+
+    const tip = [0, -root2 / 2];
+
+    const a = intersect(e2, h3CreaseLine).intersection;
+    const b = intersect(e5, h3CreaseLine).intersection;
+    const c = intersect(e5, h4CreaseLine).intersection;
+    const d = intersect(e2, h4CreaseLine).intersection;
+    const f = ([x, y]) => [-x, y];
+    console.log(a, b, c, d);
+    const polygons = [
+      [a, b, c, d],
+      [b, f(b), f(c), c],
+      [f(a), f(b), f(c), f(d)],
+    ];
+    return {
+      polygons,
+    };
+  })();
 
   const {
     polygon1,
@@ -468,18 +619,20 @@ const sketch = (p) => {
       c: [f(int6), f(int7), f(tippyTop)],
     };
     const int8 = intersect(e6, e5).intersection;
+    const toopA = [
+      int6,
+      int7,
+      [-oneMinusTanθ / (2 * root2), -oneMinusTanθ / (2 * root2)],
+      int8,
+    ];
     const toops = {
-      a: [
-        int6,
-        int7,
-        [-oneMinusTanθ / (2 * root2), -oneMinusTanθ / (2 * root2)],
-        int8,
-      ],
+      a: toopA,
+      b: toopA.map(f),
     };
     return {
       polygon1: [[0, 0], int, int2, int3, int4, f(int3), f(int2), f(int)],
       polygon2: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
-      polygon3: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
+      polygon3: [int5, int7, f(int7), f(int5)],
       tip: [int5, tippyTop, f(int5)],
       quad1: quad.map(transform),
       t1: t1.map(transform),
@@ -583,7 +736,7 @@ const sketch = (p) => {
       return s;
     });
     const wing2 = [a, b, c].map((p) => {});
-    return [wing1];
+    return wing1;
   };
 
   let petalFoldv2 = (n) => {
@@ -624,7 +777,7 @@ const sketch = (p) => {
 
       p.push();
 
-      let [wing1] = wings(α, β);
+      let wing1 = wings(α, β);
       const ifc = isFacingCamera(wing1);
       p.rotateZ(x * (θ + halfPi));
       p.rotateX(-β);
@@ -705,6 +858,10 @@ const sketch = (p) => {
     {
       duration: 2 * 1000,
       draw: smallValley3,
+    },
+    {
+      duration: 2 * 1000,
+      draw: smallValley4,
     },
   ];
   let t = 0;
