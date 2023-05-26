@@ -40,7 +40,7 @@ const judgments = {
   h1: 0.1,
   h2: 0.8,
   h3: 0.7,
-  h4: 0.4,
+  h4: 0.55,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -445,13 +445,30 @@ const sketch = (p) => {
     p.rotateX(n * π);
     p.translate(0, -t2);
 
-    p.fill(sideB);
-    triangle(...tips2.triangles.a.map(t));
-    p.fill(sideA);
-    triangle(...tips2.triangles.b.map(t));
-    p.fill(sideB);
-    triangle(...tips2.triangles.c.map(t));
-    p.pop();
+    const ifc = isFacingCamera(
+      [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+      ].map(([x, y]) => {
+        const ty = (-1 + 0.5 * (2 * h3 - h4)) / root2;
+        let q = rotateX([x, y, 0], n * π);
+        let r = add(q, [0, ty, 0]);
+        return r;
+      })
+    );
+    if (ifc) {
+      p.fill(sideB);
+      triangle(...tips2.triangles.a.map(t));
+      p.fill(sideA);
+      triangle(...tips2.triangles.b.map(t));
+      p.fill(sideB);
+      triangle(...tips2.triangles.c.map(t));
+      p.pop();
+    } else {
+      p.fill(sideB);
+      triangle(...tips2.triangles.d.map(t));
+    }
   };
 
   let smallValley1 = (n) => {
@@ -889,7 +906,7 @@ const sketch = (p) => {
       draw: smallValley3,
     },
     {
-      duration: 2 * 1000,
+      duration: 1 * 1000,
       draw: smallValley4,
     },
   ];
