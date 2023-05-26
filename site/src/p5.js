@@ -300,7 +300,21 @@ const sketch = (p) => {
     p.translate(0, -ty);
     p.rotateX(-n * π);
 
-    const ifc = false;
+    const p1 = [-h3 * 0.5, -1 + h3 * 0.5, 0];
+    const p2 = [0, -1, 0];
+    const p3 = [h3 * 0.5, -1 + 3 * 0.5, 0];
+
+    const ifc = isFacingCamera(
+      [p1, p2, p3].map((p) => {
+        p = p.map((x) => x / root2);
+        let translate = [0.0, (1 - h3 * 0.5) / root2, 0.0];
+        let q = add(p, translate);
+        let r = rotateX(q, -n * π);
+        let s = sub(r, translate);
+        return s;
+      })
+    );
+
     const t = ([x, y]) => {
       return [x, y + ty];
     };
@@ -313,7 +327,7 @@ const sketch = (p) => {
       triangle(...tips.c.map(t));
     } else {
       p.fill(sideB);
-      triangle(...tips.b.map(t));
+      triangle(...tips.d.map(t));
     }
   };
 
@@ -617,6 +631,7 @@ const sketch = (p) => {
       a: [int6, int7, tippyTop],
       b: [int6, tippyTop, f(int6)],
       c: [f(int6), f(int7), f(tippyTop)],
+      d: [int7, tippyTop, f(int7)],
     };
     const int8 = intersect(e6, e5).intersection;
     const toopA = [
@@ -856,7 +871,7 @@ const sketch = (p) => {
       draw: petalFoldv2,
     },
     {
-      duration: 2 * 1000,
+      duration: 10 * 1000,
       draw: smallValley3,
     },
     {
