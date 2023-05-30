@@ -37,10 +37,10 @@ const unit = (n) => {
 
 const judgments = {
   θ: π / 12,
-  h1: 0.1,
-  h2: 0.8,
-  h3: 0.7,
-  h4: 0.55,
+  h1Normalized: 1.0,
+  h2Normalized: 0.0,
+  h3Normalized: 1.0,
+  h4Normalized: 0.4,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -124,10 +124,10 @@ const sketch = (p) => {
     );
   };
 
-  const h1 = judgments.h1;
-  const h2 = judgments.h2;
-  const h3 = judgments.h3;
-  const h4 = judgments.h4;
+  const h1 = (judgments.h1Normalized * 2) / 3;
+  const h2 = 1.5 * h1 + judgments.h2Normalized * (1 - 1.5 * h1);
+  const h3 = judgments.h3Normalized * h2;
+  const h4 = (0.5 + judgments.h4Normalized * 0.5) * h3;
 
   let smallValley2 = (n) => {
     p.scale(paperScale);
@@ -145,16 +145,23 @@ const sketch = (p) => {
       ].map((p) => p.map((x) => x / root2))
     );
 
+    if (2 * h1 > h2) {
+      p.fill(sideA);
+      triangle(
+        ...[
+          [-h1 + h2 * 0.5, -1 + h2 * 0.5],
+          [0, -1 + h2 * 0.5 + (h1 - h2 * 0.5)],
+          [h1 - h2 * 0.5, -1 + h2 * 0.5],
+        ].map((p) => p.map((x) => x / root2))
+      );
+    }
+
     p.fill(sideA);
     p.triangle(
       ...[h * 0.5, -1 + h * 0.5, 0, -1, -h * 0.5, -1 + h * 0.5].map(
         (x) => x / root2
       )
     );
-
-    if (2 * h1 > h2) {
-      throw new Error("2 * h1 > h2");
-    }
 
     p.translate(0, (-1 + h * 0.5) / root2);
     p.fill(sideA);
@@ -220,10 +227,12 @@ const sketch = (p) => {
     polygon(...polygon1);
 
     p.fill(sideA);
-    polygon(...polygon2);
-    p.fill(sideA);
-    polygon(...polygon3);
-
+    if (h2 > h3) {
+      polygon(...polygon2);
+      polygon(...polygon3);
+    } else {
+      polygon(...polygon4);
+    }
     for (const x of [-1, 1]) {
       p.push();
       p.translate(
@@ -341,9 +350,12 @@ const sketch = (p) => {
     polygon(...polygon1);
 
     p.fill(sideA);
-    polygon(...polygon2);
-    p.fill(sideA);
-    polygon(...polygon3);
+    if (h2 > h3) {
+      polygon(...polygon2);
+      polygon(...polygon3);
+    } else {
+      polygon(...polygon4);
+    }
 
     for (const x of [-1, 1]) {
       p.push();
@@ -481,9 +493,12 @@ const sketch = (p) => {
     polygon(...polygon1);
 
     p.fill(sideA);
-    polygon(...polygon2);
-    p.fill(sideA);
-    polygon(...polygon3);
+    if (h2 > h3) {
+      polygon(...polygon2);
+      polygon(...polygon3);
+    } else {
+      polygon(...polygon4);
+    }
 
     for (const x of [-1, 1]) {
       p.push();
@@ -758,6 +773,7 @@ const sketch = (p) => {
     polygon1,
     polygon2,
     polygon3,
+    polygon4,
     tip,
     quad1,
     petal,
@@ -855,10 +871,12 @@ const sketch = (p) => {
       a: toopA,
       b: toopA.map(f),
     };
+
     return {
       polygon1: [[0, 0], int, int2, int3, int4, f(int3), f(int2), f(int)],
       polygon2: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
       polygon3: [int5, int7, f(int7), f(int5)],
+      polygon4: [int4, int3, int2, int7, f(int7), f(int2), f(int3)],
       tip: [int5, tippyTop, f(int5)],
       quad1: quad.map(transform),
       t1: t1.map(transform),
@@ -966,6 +984,7 @@ const sketch = (p) => {
   };
 
   let petalFoldv2 = (n) => {
+    if (n > 0.75) return;
     p.scale(paperScale);
 
     const β = n * π;
@@ -982,7 +1001,6 @@ const sketch = (p) => {
     p.fill(sideA);
     polygon(...polygon2);
     polygon(...tip);
-
     for (const x of [-1, 1]) {
       p.push();
       p.translate(
@@ -1057,23 +1075,23 @@ const sketch = (p) => {
       draw: () => {},
     },
     {
-      duration: 0.1 * 1000,
+      duration: 0.0 * 1000,
       draw: paper,
     },
     {
-      duration: 0.1 * 1000,
+      duration: 1.0 * 1000,
       draw: largeValleyFold,
     },
     {
-      duration: 0.1 * 1000,
+      duration: 1.0 * 1000,
       draw: smallValley1,
     },
     {
-      duration: 0.1 * 1000,
+      duration: 1.0 * 1000,
       draw: smallValley2,
     },
     {
-      duration: 0.5 * 1000,
+      duration: 1.0 * 1000,
       draw: fold2,
     },
 
@@ -1090,9 +1108,11 @@ const sketch = (p) => {
       draw: smallValley4,
     },
     {
-      duration: 15 * 1000,
+      duration: 1 * 1000,
       draw: smallMountain1,
     },
+    /*
+     */
   ];
   let t = 0;
   for (const stage of stages) {
