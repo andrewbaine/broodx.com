@@ -36,7 +36,7 @@ const unit = (n) => {
 };
 
 const judgments = {
-  θ: π / 12,
+  θ: π / 15,
   h1Normalized: 1.0,
   h2Normalized: 0.0,
   h3Normalized: 1.0,
@@ -64,8 +64,8 @@ const k1 = [-sinθ, -cosθ, 0];
 const xAxis = [1, 0, 0];
 
 const background = 200;
-const sideA = "white";
-const sideB = "lightblue";
+const sideA = "orange";
+const sideB = "white";
 
 const sketch = (p) => {
   const height = 600;
@@ -486,6 +486,7 @@ const sketch = (p) => {
   const smallMountain1 = (n) => {
     const α = 0.0;
     const β = π;
+    p.stroke("lightblue");
     p.scale(paperScale);
     p.background(background);
     p.push();
@@ -1067,6 +1068,7 @@ const sketch = (p) => {
     }
   };
 
+  const dur = 333.0;
   let stages = [
     /*
      */
@@ -1075,40 +1077,40 @@ const sketch = (p) => {
       draw: () => {},
     },
     {
-      duration: 0.0 * 1000,
+      duration: 0.0 * dur,
       draw: paper,
     },
     {
-      duration: 1.0 * 1000,
+      duration: 1.0 * dur,
       draw: largeValleyFold,
     },
     {
-      duration: 1.0 * 1000,
+      duration: 1.0 * dur,
       draw: smallValley1,
     },
     {
-      duration: 1.0 * 1000,
+      duration: 1.0 * dur,
       draw: smallValley2,
     },
     {
-      duration: 1.0 * 1000,
+      duration: 1.0 * dur,
       draw: fold2,
     },
 
     {
-      duration: 1.0 * 1000,
+      duration: 1.0 * dur,
       draw: petalFoldv2,
     },
     {
-      duration: 1 * 1000,
+      duration: 1 * dur,
       draw: smallValley3,
     },
     {
-      duration: 1 * 1000,
+      duration: 1 * dur,
       draw: smallValley4,
     },
     {
-      duration: 1 * 1000,
+      duration: 1 * dur,
       draw: smallMountain1,
     },
     /*
