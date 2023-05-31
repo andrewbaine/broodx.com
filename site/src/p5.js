@@ -14,6 +14,8 @@ import {
   dot,
 } from "./vector.js";
 
+import { divide } from "./triangle.js";
+
 import { linearEquation, intersect } from "./point2d.js";
 
 const π = Math.PI;
@@ -36,7 +38,7 @@ const unit = (n) => {
 };
 
 const judgments = {
-  θ: π / 15,
+  θ: π / 9,
   h1Normalized: 1.0,
   h2Normalized: 0.0,
   h3Normalized: 1.0,
@@ -66,6 +68,53 @@ const xAxis = [1, 0, 0];
 const background = 200;
 const sideA = "orange";
 const sideB = "white";
+
+const folds =
+  ({ height, background, paperScale, thetaDivisor }) =>
+  (p) => {
+    const θ = π / thetaDivisor;
+    const a = [0, 0];
+    const b = [0, 1];
+    const c = [1, 1];
+    const d = [1, 0];
+    const triangles = [
+      [a, b, c],
+      [c, d, a],
+    ];
+
+    const e1 = linearEquation(mid(a, d), mid(b, c));
+    const e2 = [-tan(θ), 1, 0];
+    const pA = intersect(e1, e2).intersection;
+    console.log("pA", pA);
+
+    p.setup = function () {
+      p.createCanvas(height, height, p.WEBGL);
+    };
+
+    const triangle = ([[a, b], [c, d], [e, f]]) => {
+      p.triangle(a, b, c, d, e, f);
+    };
+    let triangles2 = [];
+    for (const t of triangles) {
+      const [above, below] = divide(t, e2, 0.001);
+      for (const s of above) {
+        triangles2.push(s);
+      }
+      for (const r of below) {
+        triangles2.push(r);
+      }
+    }
+
+    p.draw = function () {
+      p.scale(height * paperScale);
+      p.background(background);
+      p.fill("white");
+      p.circle(pA[0], pA[1], 0.01);
+      for (const t of triangles2) {
+        triangle(t);
+      }
+    };
+  };
 
 const sketch = (p) => {
   const height = 600;
@@ -630,6 +679,153 @@ const sketch = (p) => {
     }
   };
 
+  const mountain2 = (n) => {
+    const α = 0.0;
+    const β = π;
+    p.stroke("lightblue");
+    p.scale(paperScale);
+    p.background(background);
+    p.push();
+    p.fill(sideB);
+    polygon(...polygon1);
+
+    p.fill(sideA);
+    if (h2 > h3) {
+      polygon(...polygon2);
+      polygon(...polygon3);
+    } else {
+      polygon(...polygon4);
+    }
+
+    for (const x of [-1, 1]) {
+      p.push();
+      p.translate(
+        (x * oneMinusTanθ) / (2 * root2),
+        -oneMinusTanθ / (2 * root2)
+      );
+      p.rotateZ((x * -1 * π) / 4);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * oneMinusTanθ) / 2,
+        0,
+        (x * -1 * (c * cos2θ)) / 2,
+        (-c * sin2θ) / 2
+      );
+
+      p.push();
+
+      let wing1 = wings(α, β);
+      const ifc = isFacingCamera(wing1);
+      p.rotateZ(x * (θ + halfPi));
+      p.rotateX(-β);
+      let m = ([a, b]) => [a * -1 * x, b];
+      if (ifc) {
+        p.fill(sideB);
+        polygon(...quad1.map(m));
+        p.fill(sideA);
+        polygon(...t1.map(m));
+        polygon(...t2.map(m));
+      } else {
+        p.fill(sideB);
+        /*        p.triangle(
+          0,
+          0,
+          (x * -1 * 1) / (2 * cosθ),
+          0,
+          (x * -1 * (sinθ * tanθ)) / 2,
+          -sinθ / 2
+          );
+          */
+      }
+
+      p.pop();
+      p.rotateZ(x * 2 * θ);
+
+      p.rotateX(-1 * (π - α));
+      p.fill(sideB);
+      p.triangle(0, 0, (x * -1 * c) / 2, 0, (x * -1 * tanθ) / 2, -1 / 2);
+
+      p.rotateZ(x * -1 * (θ - halfPi));
+      p.rotateX(β);
+
+      p.fill(sideB);
+      p.triangle(
+        0,
+        0,
+        (x * -1 * 1) / (2 * cosθ),
+        0,
+        (x * -1 * (sinθ * tanθ)) / 2,
+        -sinθ / 2
+      );
+      p.pop();
+    }
+
+    p.pop();
+
+    p.fill(sideB);
+    polygon(...toops.a);
+    polygon(...toops.b);
+
+    const ty = ((1 - 0.5 * h3) * root2) / 2;
+    p.translate(0, -ty);
+
+    p.push();
+
+    p.rotateX(-π);
+
+    p.fill(sideB);
+    const t = ([x, y]) => {
+      return [x, y + ty];
+    };
+
+    let tips2Polys = tips2.polygons.map((x) => x.map(t));
+    p.fill(sideB);
+    polygon(...tips2Polys[0]);
+
+    let t2 = ((h4 - h3) * 0.5) / root2;
+    p.translate(0, t2);
+    p.rotateX(π);
+    p.translate(0, -t2);
+
+    p.fill(sideB);
+    polygon(...tips2.polygons2.a.map(t));
+    p.fill(sideA);
+    polygon(...tips2.polygons2.b.map(t));
+    p.fill(sideB);
+    polygon(...tips2.polygons2.c.map(t));
+
+    let t3 = (2 * (h4 - h3) * 0.5) / root2;
+    p.translate(0, t3);
+    p.rotateX(n * π);
+    p.translate(0, -t3);
+
+    const ifc = isFacingCamera(
+      [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+      ].map(([x, y]) => {
+        const ty = (-1 + 0.5 * h3) / root2;
+        let q = rotateX([x, y, 0], n * π);
+        let r = add(q, [0, ty, 0]);
+        return r;
+      })
+    );
+
+    if (!ifc) {
+      p.fill(sideB);
+      triangle(...tips2.triangles2.a.map(t));
+      p.fill(sideA);
+      triangle(...tips2.triangles2.b.map(t));
+      p.fill(sideB);
+      triangle(...tips2.triangles2.c.map(t));
+      p.pop();
+    }
+  };
+
   let smallValley1 = (n) => {
     p.scale(paperScale);
     const h = h1;
@@ -985,7 +1181,6 @@ const sketch = (p) => {
   };
 
   let petalFoldv2 = (n) => {
-    if (n > 0.75) return;
     p.scale(paperScale);
 
     const β = n * π;
@@ -1098,7 +1293,7 @@ const sketch = (p) => {
     },
 
     {
-      duration: 1.0 * dur,
+      duration: 10.0 * dur,
       draw: petalFoldv2,
     },
     {
@@ -1112,6 +1307,10 @@ const sketch = (p) => {
     {
       duration: 1 * dur,
       draw: smallMountain1,
+    },
+    {
+      duration: 10 * dur,
+      draw: mountain2,
     },
     /*
      */
@@ -1141,14 +1340,26 @@ const sketch = (p) => {
   };
 };
 
+const params = new URLSearchParams(document.location.search);
 switch (window.location.pathname) {
   case "/crease":
-    const params = new URLSearchParams(document.location.search);
     new p5(
       crease({
         background: parseInt(params.get("background") || "200"),
         height: parseInt(params.get("height") || 500),
         light: params.get("light") || "lightyellow",
+      }),
+      containerElement
+    );
+    break;
+  case "/folds":
+    new p5(
+      folds({
+        thetaDivisor: parseFloat(params.get("t") || "12"),
+        background: parseInt(params.get("background") || "200"),
+        height: parseInt(params.get("height") || "500"),
+        light: params.get("light") || "lightyellow",
+        paperScale: parseFloat(params.get("paperScale") || "0.5"),
       }),
       containerElement
     );
