@@ -16,7 +16,7 @@ import {
 
 import { divide } from "./triangle.js";
 
-import { linearEquation, intersect } from "./point2d.js";
+import { linearEquation, intersect, ccw } from "./point2d.js";
 
 const π = Math.PI;
 const halfPi = π / 2;
@@ -38,11 +38,11 @@ const unit = (n) => {
 };
 
 const judgments = {
-  θ: π / 9,
+  θ: π / 12,
   h1Normalized: 1.0,
   h2Normalized: 0.0,
   h3Normalized: 1.0,
-  h4Normalized: 0.4,
+  h4Normalized: 0.7,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -67,7 +67,7 @@ const xAxis = [1, 0, 0];
 
 const background = 200;
 const sideA = "orange";
-const sideB = "white";
+const sideB = "lightyellow";
 
 const folds =
   ({ height, background, paperScale, thetaDivisor }) =>
@@ -276,12 +276,9 @@ const sketch = (p) => {
     polygon(...polygon1);
 
     p.fill(sideA);
-    if (h2 > h3) {
-      polygon(...polygon2);
-      polygon(...polygon3);
-    } else {
-      polygon(...polygon4);
-    }
+    polygon(...polygon2);
+    polygon(...polygon3);
+
     for (const x of [-1, 1]) {
       p.push();
       p.translate(
@@ -399,12 +396,8 @@ const sketch = (p) => {
     polygon(...polygon1);
 
     p.fill(sideA);
-    if (h2 > h3) {
-      polygon(...polygon2);
-      polygon(...polygon3);
-    } else {
-      polygon(...polygon4);
-    }
+    polygon(...polygon2);
+    polygon(...polygon3);
 
     for (const x of [-1, 1]) {
       p.push();
@@ -543,12 +536,8 @@ const sketch = (p) => {
     polygon(...polygon1);
 
     p.fill(sideA);
-    if (h2 > h3) {
-      polygon(...polygon2);
-      polygon(...polygon3);
-    } else {
-      polygon(...polygon4);
-    }
+    polygon(...polygon2);
+    polygon(...polygon3);
 
     for (const x of [-1, 1]) {
       p.push();
@@ -690,12 +679,8 @@ const sketch = (p) => {
     polygon(...polygon1);
 
     p.fill(sideA);
-    if (h2 > h3) {
-      polygon(...polygon2);
-      polygon(...polygon3);
-    } else {
-      polygon(...polygon4);
-    }
+    polygon(...polygon2);
+    polygon(...polygon3);
 
     for (const x of [-1, 1]) {
       p.push();
@@ -979,17 +964,14 @@ const sketch = (p) => {
     tips,
     toops,
     int8,
+    int34,
   } = (() => {
-    const leftEdge = linearEquation(
-      [(-1 * root2) / 2, 0],
-      [0, (-1 * root2) / 2]
-    );
+    const top = [0, -root2 / 2];
+    const p1 = [-oneMinusTanθ / (root2 * 2), -oneMinusTanθ / (root2 * 2)];
+    const leftEdge = linearEquation([(-1 * root2) / 2, 0], top);
     // y = x
     const e1 = [1, -1, 0];
-    const e2 = linearEquation(
-      [0, (-1 * root2) / 2],
-      [-oneMinusTanθ / (root2 * 2), -oneMinusTanθ / (root2 * 2)]
-    );
+    const e2 = linearEquation(top, p1);
     const e3 = linearEquation(
       [(-0.5 * h2 * root2) / 2, ((0.5 * h2 - 1) * root2) / 2],
       [0, ((h2 - 1) * root2) / 2]
@@ -1003,20 +985,19 @@ const sketch = (p) => {
       throw new Error("no intersection");
     }
     const e4 = [0, 1, ((1 - h2 + 0.5 * h1) * root2) / 2];
-    const e5 = linearEquation(
-      [0, -root2 / 2],
-      [-tan(π / 4 - 2 * θ) / root2, 0]
-    );
+    const int24 = intersect(e2, e4).intersection;
+    const e5 = linearEquation(top, [-tan(π / 4 - 2 * θ) / root2, 0]);
 
     const e6 = linearEquation(
       [0, -((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ) / 2],
-      [-oneMinusTanθ / (root2 * 2), -oneMinusTanθ / (root2 * 2)]
+      p1
     );
 
     const h3CreaseLine = [0, 1, ((1 - 0.5 * h3) * root2) / 2];
     const int6 = intersect(e5, h3CreaseLine).intersection;
     const int7 = intersect(e2, h3CreaseLine).intersection;
     const int3 = intersect(e4, e3).intersection;
+    const int34 = intersect(e3, e4).intersection;
     if (!int3) {
       throw new Error("no intersection 3");
     }
@@ -1037,12 +1018,18 @@ const sketch = (p) => {
       int2,
       int,
     ];
-    const t1 = [int2, intersect(e3, leftEdge).intersection, int5];
-    const t2 = [
+
+    const quad99 = [
+      intersect(e1, leftEdge).intersection,
       intersect(e3, leftEdge).intersection,
-      int5,
-      [0, (-1 * root2) / 2],
+      int3,
+      int24,
+      int,
     ];
+
+    const t1 = [int2, intersect(e3, leftEdge).intersection, int5];
+    const t99 = [int24, int3, intersect(e3, leftEdge).intersection, int5];
+    const t2 = [intersect(e3, leftEdge).intersection, int5, top];
     const transform = ([x, y]) => {
       let tx = oneMinusTanθ / (2 * root2);
       let ty = oneMinusTanθ / (2 * root2);
@@ -1050,12 +1037,11 @@ const sketch = (p) => {
       let [xx, yy, zz] = rotateZ(v, θ + π / 4);
       return [xx, yy];
     };
-    const tippyTop = [0, -root2 / 2];
     const tips = {
-      a: [int6, int7, tippyTop],
-      b: [int6, tippyTop, f(int6)],
-      c: [f(int6), f(int7), f(tippyTop)],
-      d: [int7, tippyTop, f(int7)],
+      a: [int6, int7, top],
+      b: [int6, top, f(int6)],
+      c: [f(int6), f(int7), f(top)],
+      d: [int7, top, f(int7)],
     };
     const int8 = intersect(e6, e5).intersection;
     const toopA = [
@@ -1069,14 +1055,19 @@ const sketch = (p) => {
       b: toopA.map(f),
     };
 
+    const polygon1 = [[0, 0], int, int2, int3, int4, f(int3), f(int2), f(int)];
+    const polygon99 = [[0, 0], int, int24, f(int24), f(int)];
+    const polygon2 = [int4, int3, int2, int5, f(int5), f(int2), f(int3)];
+    const polygon100 = [int24, int5, f(int5), f(int24)];
+
     return {
-      polygon1: [[0, 0], int, int2, int3, int4, f(int3), f(int2), f(int)],
-      polygon2: [int4, int3, int2, int5, f(int5), f(int2), f(int3)],
+      polygon1: ccw(int, top, int34) ? polygon1 : polygon99,
+      polygon2: ccw(int, top, int34) ? polygon2 : polygon100,
       polygon3: [int5, int7, f(int7), f(int5)],
       polygon4: [int4, int3, int2, int7, f(int7), f(int2), f(int3)],
-      tip: [int5, tippyTop, f(int5)],
-      quad1: quad.map(transform),
-      t1: t1.map(transform),
+      tip: [int5, top, f(int5)],
+      quad1: (ccw(int, top, int34) ? quad : quad99).map(transform),
+      t1: ccw(int, top, int34) ? t1.map(transform) : t99.map(transform),
       t2: t2.map(transform),
       petal: [
         [0, 0],
@@ -1086,6 +1077,7 @@ const sketch = (p) => {
       tips,
       toops,
       int8,
+      int34,
     };
   })();
   let fold2 = (n) => {
