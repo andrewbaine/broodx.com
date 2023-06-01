@@ -40,9 +40,9 @@ const unit = (n) => {
 const judgments = {
   θ: π / 12,
   h1Normalized: 1.0,
-  h2Normalized: 0.0,
+  h2Normalized: 1.0,
   h3Normalized: 1.0,
-  h4Normalized: 0.7,
+  h4Normalized: 0.6,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -52,6 +52,30 @@ const cos2θ = cos(2 * θ);
 const sin2θ = sin(2 * θ);
 const containerElement = document.getElementById("main");
 let oneMinusTanθ = 1 - tan(θ);
+
+const makeTriangle = (h1, h2, ty) => {
+  if (h1 < h2) {
+    return makeTriangle(h2, h1, ty);
+  }
+  const a = [-h1 * tan(π / 4 - θ), 0 + ty];
+  const b = [-h1 * tan(π / 4 - 2 * θ), 0 + ty];
+  const c = [0, 0 + ty];
+
+  const d = [-h2 * tan(π / 4 - θ), h1 - h2 + ty];
+  const e = [-h2 * tan(π / 4 - θ), h1 - h2 + ty];
+  const f = [0, h1 - h2 + ty];
+
+  return [
+    [a, b, e, d],
+    [b, c, f, e],
+  ];
+};
+
+const mt = (h) => {
+  const a = (0.5 * h * tan(π / 4 - θ) * root2) / 2;
+  const b = (0.5 * h * tan(π / 4 - 2 * θ) * root2) / 2;
+  return [-a, -b];
+};
 
 const cartesian = (r, θ) => {
   return {
@@ -66,8 +90,8 @@ const k1 = [-sinθ, -cosθ, 0];
 const xAxis = [1, 0, 0];
 
 const background = 200;
-const sideA = "orange";
-const sideB = "lightyellow";
+const sideA = "white";
+const sideB = "pink";
 
 const folds =
   ({ height, background, paperScale, thetaDivisor }) =>
@@ -85,7 +109,6 @@ const folds =
     const e1 = linearEquation(mid(a, d), mid(b, c));
     const e2 = [-tan(θ), 1, 0];
     const pA = intersect(e1, e2).intersection;
-    console.log("pA", pA);
 
     p.setup = function () {
       p.createCanvas(height, height, p.WEBGL);
@@ -528,7 +551,6 @@ const sketch = (p) => {
   const smallMountain1 = (n) => {
     const α = 0.0;
     const β = π;
-    p.stroke("lightblue");
     p.scale(paperScale);
     p.background(background);
     p.push();
@@ -669,11 +691,174 @@ const sketch = (p) => {
   };
 
   const mountain2 = (n) => {
-    const α = 0.0;
-    const β = π;
-    p.stroke("lightblue");
+    const θ2 = π / 4 - 2 * θ;
+    const origin = [0, 0];
+    const e45 = [1, -1, 0];
+    const e45Neg = [1, 1, 0];
+    const tip = [0, -root2 / 2];
+    const petalTip = add(tip, [-sin(θ2), cos(θ2)]);
+    const petalP1 = mid(tip, petalTip);
+    const petalP2 = [
+      0,
+      -((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ) / 2,
+    ];
+
+    const petalP3 = intersect(linearEquation(tip, petalTip), e45).intersection;
+
+    const eLeft = linearEquation(tip, [(-tan(θ2) * root2) / 2, 0]);
+    const eRight = linearEquation(tip, [(tan(θ2) * root2) / 2, 0]);
+
+    const transpose = ([x, y]) => [-x, y];
+    const bodyTopLeft = intersect(eLeft, [
+      0,
+      1,
+      ((1 - 0.5 * h3) * root2) / 2,
+    ]).intersection;
+
+    const bodyLeft = intersect(e45, eLeft).intersection;
+
+    const body = [
+      origin,
+      bodyLeft,
+      bodyTopLeft,
+      intersect(eRight, [0, 1, ((1 - 0.5 * h3) * root2) / 2]).intersection,
+      intersect(e45Neg, eRight).intersection,
+    ];
+
+    const headHeight = ((-1 + h2 - 0.5 * h1) * root2) / 2;
+    const headHeightLine = [0, -1, headHeight];
+    const headDiagonal = [1, -1, ((-1 + h2) * root2) / 2];
+    const headPointThatMayBeHidden = intersect(
+      headDiagonal,
+      headHeightLine
+    ).intersection;
+
+    const head = ccw(bodyTopLeft, bodyLeft, headPointThatMayBeHidden)
+      ? [
+          intersect(headHeightLine, eLeft).intersection,
+          bodyTopLeft,
+          transpose(bodyTopLeft),
+          transpose(intersect(headHeightLine, eLeft).intersection),
+        ]
+      : [
+          headPointThatMayBeHidden,
+          intersect(eLeft, headDiagonal).intersection,
+          bodyTopLeft,
+          transpose(bodyTopLeft),
+          transpose(intersect(eLeft, headDiagonal).intersection),
+          transpose(headPointThatMayBeHidden),
+        ];
+
+    const eyeAHeight = ((-1 + h3 - 0.5 * h4) * root2) / 2;
+    const eyeAHeightLine = [0, -1, eyeAHeight];
+    const [x1, x2] = mt(h4);
+    const eyeAPointThatMayBeInView = [x1, eyeAHeight];
+    const eyeBBottomRight = [x2, eyeAHeight];
+
+    const eyeEdgeIntersection = intersect(eyeAHeightLine, eLeft).intersection;
+    const eyeA = ccw(bodyTopLeft, bodyLeft, eyeAPointThatMayBeInView)
+      ? [
+          eyeEdgeIntersection,
+          bodyTopLeft,
+          transpose(bodyTopLeft),
+          transpose(eyeEdgeIntersection),
+        ]
+      : [
+          eyeAPointThatMayBeInView,
+          eyeEdgeIntersection,
+          bodyTopLeft,
+          transpose(bodyTopLeft),
+          transpose(eyeEdgeIntersection),
+          transpose(eyeAPointThatMayBeInView),
+        ];
+
+    let tippy = [0, ((-1 + h3 - h4) * root2) / 2];
+    let eyeBTopRight = intersect(linearEquation(tippy, eyeBBottomRight), [
+      0,
+      -1,
+      ((-1 + 0.5 * h3) * root2) / 2,
+    ]).intersection;
+    const leq = linearEquation(tippy, eyeAPointThatMayBeInView);
+    const head2MaybeB = intersect(leq, [
+      0,
+      -1,
+      ((-1 + 0.5 * h3) * root2) / 2,
+    ]).intersection;
+    const head2MaybeC = intersect(leq, eLeft).intersection;
+    let head2;
+
+    let eyeB = [];
+    if (ccw(bodyTopLeft, bodyLeft, eyeAPointThatMayBeInView)) {
+      if (ccw(bodyTopLeft, bodyLeft, head2MaybeB)) {
+        head2 = [
+          eyeEdgeIntersection,
+          bodyTopLeft,
+          transpose(bodyTopLeft),
+          transpose(eyeEdgeIntersection),
+        ];
+        eyeB = [
+          eyeEdgeIntersection,
+          bodyTopLeft,
+          eyeBTopRight,
+          eyeBBottomRight,
+        ];
+      } else {
+        head2 = [
+          eyeEdgeIntersection,
+          head2MaybeC,
+          head2MaybeB,
+          transpose(head2MaybeB),
+          transpose(head2MaybeC),
+          transpose(eyeEdgeIntersection),
+        ];
+        eyeB = [
+          eyeEdgeIntersection,
+          head2MaybeC,
+          head2MaybeB,
+          eyeBTopRight,
+          eyeBBottomRight,
+        ];
+      }
+    } else {
+      head2 = [
+        eyeAPointThatMayBeInView,
+        head2MaybeB,
+        transpose(head2MaybeB),
+        transpose(eyeAPointThatMayBeInView),
+      ];
+      eyeB = [
+        eyeAPointThatMayBeInView,
+        head2MaybeB,
+        eyeBTopRight,
+        eyeBBottomRight,
+      ];
+    }
+
     p.scale(paperScale);
     p.background(background);
+
+    p.fill(sideB);
+    polygon(...body);
+    p.fill(sideA);
+    polygon(...head);
+
+    p.fill(sideB);
+    triangle(petalTip, petalP1, petalP2);
+
+    //    p.circle(eyeAPointThatMayBeInView[0], eyeAPointThatMayBeInView[1], 0.01);
+
+    polygon(...eyeA);
+
+    p.fill(sideA);
+    polygon(...head2);
+
+    p.fill(sideB);
+    polygon(...eyeB);
+    //    p.circle(headPointThatMayBeHidden[0], headPointThatMayBeHidden[1], 0.1);
+
+    /*
+    const α = 0.0;
+    const β = π;
     p.push();
     p.fill(sideB);
     polygon(...polygon1);
@@ -707,24 +892,6 @@ const sketch = (p) => {
       p.rotateZ(x * (θ + halfPi));
       p.rotateX(-β);
       let m = ([a, b]) => [a * -1 * x, b];
-      if (ifc) {
-        p.fill(sideB);
-        polygon(...quad1.map(m));
-        p.fill(sideA);
-        polygon(...t1.map(m));
-        polygon(...t2.map(m));
-      } else {
-        p.fill(sideB);
-        /*        p.triangle(
-          0,
-          0,
-          (x * -1 * 1) / (2 * cosθ),
-          0,
-          (x * -1 * (sinθ * tanθ)) / 2,
-          -sinθ / 2
-          );
-          */
-      }
 
       p.pop();
       p.rotateZ(x * 2 * θ);
@@ -746,7 +913,7 @@ const sketch = (p) => {
         -sinθ / 2
       );
       p.pop();
-    }
+      }
 
     p.pop();
 
@@ -780,35 +947,8 @@ const sketch = (p) => {
     p.fill(sideA);
     polygon(...tips2.polygons2.b.map(t));
     p.fill(sideB);
-    polygon(...tips2.polygons2.c.map(t));
-
-    let t3 = (2 * (h4 - h3) * 0.5) / root2;
-    p.translate(0, t3);
-    p.rotateX(n * π);
-    p.translate(0, -t3);
-
-    const ifc = isFacingCamera(
-      [
-        [-1, 0],
-        [1, 0],
-        [0, -1],
-      ].map(([x, y]) => {
-        const ty = (-1 + 0.5 * h3) / root2;
-        let q = rotateX([x, y, 0], n * π);
-        let r = add(q, [0, ty, 0]);
-        return r;
-      })
-    );
-
-    if (!ifc) {
-      p.fill(sideB);
-      triangle(...tips2.triangles2.a.map(t));
-      p.fill(sideA);
-      triangle(...tips2.triangles2.b.map(t));
-      p.fill(sideB);
-      triangle(...tips2.triangles2.c.map(t));
-      p.pop();
-    }
+        polygon(...tips2.polygons2.c.map(t));
+        */
   };
 
   let smallValley1 = (n) => {
@@ -902,7 +1042,7 @@ const sketch = (p) => {
 
   const tips2 = (() => {
     const e2 = linearEquation(
-      [0, (-1 * root2) / 2],
+      [0, -root2 / 2],
       [-oneMinusTanθ / (root2 * 2), -oneMinusTanθ / (root2 * 2)]
     );
 
@@ -925,11 +1065,12 @@ const sketch = (p) => {
     const m = intersect(e2, h5CreaseLine).intersection;
     const n = intersect(e5, h5CreaseLine).intersection;
 
-    console.log({ m, n });
-
     const f = ([x, y]) => [-x, y];
     const polygons = [[a, d, f(d), f(a)]];
-    console.log(polygons[0]);
+
+    const r1 = [0, -root2 / 2];
+    const r2 = [(-root2 * tan(π / 4 - 2 * θ)) / 2, 0];
+
     return {
       polygons,
       triangles: {
@@ -943,6 +1084,15 @@ const sketch = (p) => {
         b: [c, n, f(n), f(c)],
         c: [f(c), f(d), f(m), f(n)],
       },
+
+      polygons3: {
+        a: [],
+        b: [],
+        c: [c, n, f(n), f(c)],
+        d: [],
+        e: [],
+      },
+
       triangles2: {
         a: [m, n, tip],
         b: [n, f(n), tip],
@@ -1255,7 +1405,7 @@ const sketch = (p) => {
     }
   };
 
-  const dur = 333.0;
+  const dur = 33.0;
   let stages = [
     /*
      */
@@ -1285,7 +1435,7 @@ const sketch = (p) => {
     },
 
     {
-      duration: 10.0 * dur,
+      duration: 1.0 * dur,
       draw: petalFoldv2,
     },
     {
