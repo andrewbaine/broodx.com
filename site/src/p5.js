@@ -38,11 +38,11 @@ const unit = (n) => {
 };
 
 const judgments = {
-  θ: π / 12,
+  θ: π / 16,
   h1Normalized: 1.0,
   h2Normalized: 1.0,
   h3Normalized: 1.0,
-  h4Normalized: 0.6,
+  h4Normalized: 0.8,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -703,7 +703,10 @@ const sketch = (p) => {
       -((1 - tan(θ)) * sin(2 * θ)) / sin((3 * π) / 4 - 2 * θ) / 2,
     ];
 
-    const petalP3 = intersect(linearEquation(tip, petalTip), e45).intersection;
+    const petalP3 = intersect(
+      linearEquation(petalTip, petalP2),
+      e45
+    ).intersection;
 
     const eLeft = linearEquation(tip, [(-tan(θ2) * root2) / 2, 0]);
     const eRight = linearEquation(tip, [(tan(θ2) * root2) / 2, 0]);
@@ -714,6 +717,7 @@ const sketch = (p) => {
       1,
       ((1 - 0.5 * h3) * root2) / 2,
     ]).intersection;
+    const bodyTopRight = transpose(bodyTopLeft);
 
     const bodyLeft = intersect(e45, eLeft).intersection;
 
@@ -723,6 +727,19 @@ const sketch = (p) => {
       bodyTopLeft,
       intersect(eRight, [0, 1, ((1 - 0.5 * h3) * root2) / 2]).intersection,
       intersect(e45Neg, eRight).intersection,
+    ];
+
+    const body1 = [
+      origin,
+      petalP3,
+      petalP2,
+      petalP1,
+      bodyTopLeft,
+      bodyTopRight,
+
+      transpose(petalP1),
+      transpose(petalP2),
+      transpose(petalP3),
     ];
 
     const headHeight = ((-1 + h2 - 0.5 * h1) * root2) / 2;
@@ -752,25 +769,47 @@ const sketch = (p) => {
     const eyeAHeight = ((-1 + h3 - 0.5 * h4) * root2) / 2;
     const eyeAHeightLine = [0, -1, eyeAHeight];
     const [x1, x2] = mt(h4);
+    const wingTopLeft = (() => {
+      const [x1, x2] = mt(h3);
+      return [x1, ((-1 + 0.5 * h3) * root2) / 2];
+    })();
+
     const eyeAPointThatMayBeInView = [x1, eyeAHeight];
     const eyeBBottomRight = [x2, eyeAHeight];
 
     const eyeEdgeIntersection = intersect(eyeAHeightLine, eLeft).intersection;
-    const eyeA = ccw(bodyTopLeft, bodyLeft, eyeAPointThatMayBeInView)
-      ? [
-          eyeEdgeIntersection,
-          bodyTopLeft,
-          transpose(bodyTopLeft),
-          transpose(eyeEdgeIntersection),
-        ]
-      : [
-          eyeAPointThatMayBeInView,
-          eyeEdgeIntersection,
-          bodyTopLeft,
-          transpose(bodyTopLeft),
-          transpose(eyeEdgeIntersection),
-          transpose(eyeAPointThatMayBeInView),
-        ];
+
+    let eyeA = [];
+    let eyeC = [];
+    if (ccw(bodyTopLeft, bodyLeft, eyeAPointThatMayBeInView)) {
+      eyeA = [
+        eyeEdgeIntersection,
+        bodyTopLeft,
+        transpose(bodyTopLeft),
+        transpose(eyeEdgeIntersection),
+      ];
+      eyeC = [
+        wingTopLeft,
+        bodyTopLeft,
+        eyeEdgeIntersection,
+        eyeAPointThatMayBeInView,
+      ];
+    } else {
+      const xx = intersect(
+        eLeft,
+        linearEquation(wingTopLeft, eyeAPointThatMayBeInView)
+      ).intersection;
+      eyeA = [
+        eyeAPointThatMayBeInView,
+        xx,
+        eyeEdgeIntersection,
+        bodyTopLeft,
+        transpose(bodyTopLeft),
+        transpose(xx),
+        transpose(eyeAPointThatMayBeInView),
+      ];
+      eyeC = [xx, wingTopLeft, bodyTopLeft];
+    }
 
     let tippy = [0, ((-1 + h3 - h4) * root2) / 2];
     let eyeBTopRight = intersect(linearEquation(tippy, eyeBBottomRight), [
@@ -788,6 +827,7 @@ const sketch = (p) => {
     let head2;
 
     let eyeB = [];
+    let eyeD = [];
     if (ccw(bodyTopLeft, bodyLeft, eyeAPointThatMayBeInView)) {
       if (ccw(bodyTopLeft, bodyLeft, head2MaybeB)) {
         head2 = [
@@ -801,6 +841,12 @@ const sketch = (p) => {
           bodyTopLeft,
           eyeBTopRight,
           eyeBBottomRight,
+        ];
+        eyeD = [
+          head2MaybeB,
+          bodyTopLeft,
+          eyeEdgeIntersection,
+          eyeAPointThatMayBeInView,
         ];
       } else {
         head2 = [
@@ -818,6 +864,7 @@ const sketch = (p) => {
           eyeBTopRight,
           eyeBBottomRight,
         ];
+        eyeD = [head2MaybeC, eyeEdgeIntersection, eyeAPointThatMayBeInView];
       }
     } else {
       head2 = [
@@ -832,20 +879,31 @@ const sketch = (p) => {
         eyeBTopRight,
         eyeBBottomRight,
       ];
+      eyeD = [];
     }
+    const wingLeft = intersect(
+      linearEquation(petalP1, petalP2),
+      e45
+    ).intersection;
+    const wing = [petalTip, wingLeft, wingTopLeft, bodyTopLeft];
 
     p.scale(paperScale);
     p.background(background);
 
     p.fill(sideB);
-    polygon(...body);
+    polygon(...body1);
+
+    p.push();
     p.fill(sideA);
     polygon(...head);
-
+    p.pop();
     p.fill(sideB);
     triangle(petalTip, petalP1, petalP2);
+    triangle(transpose(petalTip), transpose(petalP1), transpose(petalP2));
 
     //    p.circle(eyeAPointThatMayBeInView[0], eyeAPointThatMayBeInView[1], 0.01);
+
+    p.push();
 
     polygon(...eyeA);
 
@@ -854,6 +912,11 @@ const sketch = (p) => {
 
     p.fill(sideB);
     polygon(...eyeB);
+    polygon(...eyeB.map(transpose));
+
+    polygon(...wing);
+    polygon(...eyeC);
+    polygon(...eyeD);
     //    p.circle(headPointThatMayBeHidden[0], headPointThatMayBeHidden[1], 0.1);
 
     /*
@@ -1405,7 +1468,7 @@ const sketch = (p) => {
     }
   };
 
-  const dur = 33.0;
+  const dur = 100.0;
   let stages = [
     /*
      */
