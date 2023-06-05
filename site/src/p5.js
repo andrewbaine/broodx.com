@@ -38,7 +38,7 @@ const unit = (n) => {
 };
 
 const judgments = {
-  θ: π / 16,
+  θ: π / 10.7,
   h1Normalized: 1.0,
   h2Normalized: 1.0,
   h3Normalized: 1.0,
@@ -150,13 +150,19 @@ const sketch = (p) => {
     (x) => x / paperScale
   );
 
+  let debugPoint = ([x, y], color) => {
+    p.push();
+    p.fill(color || "lightblue");
+    p.circle(x, y, 0.05);
+    p.pop();
+  };
+
   // this function is for unit paper scale
   const isFacingCamera = ([a, b, c]) => {
     const v1 = sub(a, b);
     const v2 = sub(c, b);
     const interior = mid(mid(a, b), c);
     const camVector = normalize(sub(cameraCoordinates, interior));
-
     const normal = cross(v1, v2);
 
     const d = dot(normal, camVector);
@@ -728,7 +734,7 @@ const sketch = (p) => {
       intersect(eRight, [0, 1, ((1 - 0.5 * h3) * root2) / 2]).intersection,
       intersect(e45Neg, eRight).intersection,
     ];
-
+    /*
     const body1 = [
       origin,
       petalP3,
@@ -740,7 +746,8 @@ const sketch = (p) => {
       transpose(petalP1),
       transpose(petalP2),
       transpose(petalP3),
-    ];
+      ];
+      */
 
     const headHeight = ((-1 + h2 - 0.5 * h1) * root2) / 2;
     const headHeightLine = [0, -1, headHeight];
@@ -891,17 +898,16 @@ const sketch = (p) => {
     p.background(background);
 
     p.fill(sideB);
-    polygon(...body1);
+    polygon(...body);
 
     p.push();
     p.fill(sideA);
     polygon(...head);
     p.pop();
     p.fill(sideB);
+
     triangle(petalTip, petalP1, petalP2);
     triangle(transpose(petalTip), transpose(petalP1), transpose(petalP2));
-
-    //    p.circle(eyeAPointThatMayBeInView[0], eyeAPointThatMayBeInView[1], 0.01);
 
     p.push();
 
@@ -914,104 +920,43 @@ const sketch = (p) => {
     polygon(...eyeB);
     polygon(...eyeB.map(transpose));
 
-    polygon(...wing);
-    polygon(...eyeC);
-    polygon(...eyeD);
-    //    p.circle(headPointThatMayBeHidden[0], headPointThatMayBeHidden[1], 0.1);
-
-    /*
-    const α = 0.0;
-    const β = π;
     p.push();
-    p.fill(sideB);
-    polygon(...polygon1);
-
-    p.fill(sideA);
-    polygon(...polygon2);
-    polygon(...polygon3);
-
-    for (const x of [-1, 1]) {
-      p.push();
-      p.translate(
-        (x * oneMinusTanθ) / (2 * root2),
-        -oneMinusTanθ / (2 * root2)
-      );
-      p.rotateZ((x * -1 * π) / 4);
-
-      p.fill(sideB);
-      p.triangle(
-        0,
-        0,
-        (x * -1 * oneMinusTanθ) / 2,
-        0,
-        (x * -1 * (c * cos2θ)) / 2,
-        (-c * sin2θ) / 2
-      );
-
-      p.push();
-
-      let wing1 = wings(α, β);
-      const ifc = isFacingCamera(wing1);
-      p.rotateZ(x * (θ + halfPi));
-      p.rotateX(-β);
-      let m = ([a, b]) => [a * -1 * x, b];
-
-      p.pop();
-      p.rotateZ(x * 2 * θ);
-
-      p.rotateX(-1 * (π - α));
-      p.fill(sideB);
-      p.triangle(0, 0, (x * -1 * c) / 2, 0, (x * -1 * tanθ) / 2, -1 / 2);
-
-      p.rotateZ(x * -1 * (θ - halfPi));
-      p.rotateX(β);
-
-      p.fill(sideB);
-      p.triangle(
-        0,
-        0,
-        (x * -1 * 1) / (2 * cosθ),
-        0,
-        (x * -1 * (sinθ * tanθ)) / 2,
-        -sinθ / 2
-      );
-      p.pop();
-      }
-
-    p.pop();
-
-    p.fill(sideB);
-    polygon(...toops.a);
-    polygon(...toops.b);
-
-    const ty = ((1 - 0.5 * h3) * root2) / 2;
-    p.translate(0, -ty);
-
-    p.push();
-
-    p.rotateX(-π);
-
-    p.fill(sideB);
-    const t = ([x, y]) => {
-      return [x, y + ty];
+    const [tx, ty] = petalTip;
+    const tt = ([x, y]) => {
+      let v = [x - tx, y - ty, 0];
+      let p1 = rotateZ(v, π / 4 + 2 * θ);
+      return p1;
     };
 
-    let tips2Polys = tips2.polygons.map((x) => x.map(t));
-    p.fill(sideB);
-    polygon(...tips2Polys[0]);
+    const p1 = wingLeft;
+    const p2 = [p1[0] - tx, p1[1] - ty, 0];
+    const k = normalize([petalP1[0] - tx, petalP1[1] - ty, 0]);
+    const p3 = rotate(p2, k, n * π);
+    //    const p3 = p2;
+    const p4 = [p3[0] + tx, p3[1] + ty, 0];
 
-    let t2 = ((h4 - h3) * 0.5) / root2;
-    p.translate(0, t2);
-    p.rotateX(π);
-    p.translate(0, -t2);
+    const ifc = isFacingCamera(
+      [petalTip, petalP1, p4].map(([x, y]) => [x, y, 0])
+    );
+    p.translate(tx, ty);
+    p.rotateZ(-π / 4 - 2 * θ);
+    p.rotateX(n * π);
+    polygon(...wing.map(tt));
+    wing.map((p) => {
+      const [x, y] = p;
+      const translate = [petalTip[0], petalTip[1], 0];
+      let q = sub([x, y, 0], translate);
+      let k = sub([petalP1[0], petalP2[1], 0], translate);
+      let r = rotate(q, k, n * π);
+      let s = add(r, translate);
+      return s;
+    });
 
-    p.fill(sideB);
-    polygon(...tips2.polygons2.a.map(t));
-    p.fill(sideA);
-    polygon(...tips2.polygons2.b.map(t));
-    p.fill(sideB);
-        polygon(...tips2.polygons2.c.map(t));
-        */
+    if (!ifc) {
+      polygon(...eyeC.map(tt));
+      polygon(...eyeD.map(tt));
+    }
+    p.pop();
   };
 
   let smallValley1 = (n) => {
