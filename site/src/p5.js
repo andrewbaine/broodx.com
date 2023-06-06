@@ -38,11 +38,13 @@ const unit = (n) => {
 };
 
 const judgments = {
-  θ: π / 10.7,
+  θ: π / 12,
   h1Normalized: 1.0,
   h2Normalized: 1.0,
   h3Normalized: 1.0,
   h4Normalized: 0.8,
+  headTopNormalized: 0.0,
+  headBottomNormalized: 0.0,
 };
 const θ = judgments.θ;
 const cosθ = cos(θ);
@@ -1413,16 +1415,10 @@ const sketch = (p) => {
     }
   };
 
-  const dur = 100.0;
+  const dur = 1000.0;
   let stages = [
-    /*
-     */
     {
-      duration: 0,
-      draw: () => {},
-    },
-    {
-      duration: 0.0 * dur,
+      duration: 1.0 * dur,
       draw: paper,
     },
     {
@@ -1437,7 +1433,7 @@ const sketch = (p) => {
       duration: 1.0 * dur,
       draw: smallValley2,
     },
-    {
+    /*    {
       duration: 1.0 * dur,
       draw: fold2,
     },
@@ -1462,7 +1458,6 @@ const sketch = (p) => {
       duration: 10 * dur,
       draw: mountain2,
     },
-    /*
      */
   ];
   let t = 0;
