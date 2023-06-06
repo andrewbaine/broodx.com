@@ -463,15 +463,6 @@ const sketch = (p) => {
         polygon(...t2.map(m));
       } else {
         p.fill(sideB);
-        /*        p.triangle(
-          0,
-          0,
-          (x * -1 * 1) / (2 * cosθ),
-          0,
-          (x * -1 * (sinθ * tanθ)) / 2,
-          -sinθ / 2
-          );
-          */
       }
 
       p.pop();
@@ -513,14 +504,6 @@ const sketch = (p) => {
     const t = ([x, y]) => {
       return [x, y + ty];
     };
-    /*
-      
-    triangle(...tips.a.map(t));
-    p.fill(sideA);
-    triangle(...tips.b.map(t));
-    p.fill(sideB);
-    triangle(...tips.c.map(t));
-    */
     let tips2Polys = tips2.polygons.map((x) => x.map(t));
     p.fill(sideB);
     polygon(...tips2Polys[0]);
@@ -602,15 +585,6 @@ const sketch = (p) => {
         polygon(...t2.map(m));
       } else {
         p.fill(sideB);
-        /*        p.triangle(
-          0,
-          0,
-          (x * -1 * 1) / (2 * cosθ),
-          0,
-          (x * -1 * (sinθ * tanθ)) / 2,
-          -sinθ / 2
-          );
-          */
       }
 
       p.pop();
@@ -940,21 +914,12 @@ const sketch = (p) => {
     const ifc = isFacingCamera(
       [petalTip, petalP1, p4].map(([x, y]) => [x, y, 0])
     );
-    p.translate(tx, ty);
-    p.rotateZ(-π / 4 - 2 * θ);
-    p.rotateX(n * π);
-    polygon(...wing.map(tt));
-    wing.map((p) => {
-      const [x, y] = p;
-      const translate = [petalTip[0], petalTip[1], 0];
-      let q = sub([x, y, 0], translate);
-      let k = sub([petalP1[0], petalP2[1], 0], translate);
-      let r = rotate(q, k, n * π);
-      let s = add(r, translate);
-      return s;
-    });
 
     if (!ifc) {
+      p.translate(tx, ty);
+      p.rotateZ(-π / 4 - 2 * θ);
+      p.rotateX(n * π);
+      polygon(...wing.map(tt));
       polygon(...eyeC.map(tt));
       polygon(...eyeD.map(tt));
     }
@@ -1040,14 +1005,6 @@ const sketch = (p) => {
     const e5 = linearEquation(tip, [-tan(π / 4 - 2 * θ) / root2, 0]);
 
     const h4CreaseLine = [0, 1, ((1 - 0.5 * h4) * root2) / 2];
-
-    /*
-    const polygons = {
-      a: [a, b, c, d],
-      b: [b, c, f(c), f(b)],
-      c: [f(a), f(b), f(c), f(d)],
-      };
-      */
   })();
 
   const tips2 = (() => {
@@ -1433,7 +1390,7 @@ const sketch = (p) => {
       duration: 1.0 * dur,
       draw: smallValley2,
     },
-    /*    {
+    {
       duration: 1.0 * dur,
       draw: fold2,
     },
@@ -1458,7 +1415,6 @@ const sketch = (p) => {
       duration: 10 * dur,
       draw: mountain2,
     },
-     */
   ];
   let t = 0;
   for (const stage of stages) {
@@ -1487,16 +1443,6 @@ const sketch = (p) => {
 
 const params = new URLSearchParams(document.location.search);
 switch (window.location.pathname) {
-  case "/crease":
-    new p5(
-      crease({
-        background: parseInt(params.get("background") || "200"),
-        height: parseInt(params.get("height") || 500),
-        light: params.get("light") || "lightyellow",
-      }),
-      containerElement
-    );
-    break;
   case "/folds":
     new p5(
       folds({
