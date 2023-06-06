@@ -710,7 +710,6 @@ const sketch = (p) => {
       intersect(eRight, [0, 1, ((1 - 0.5 * h3) * root2) / 2]).intersection,
       intersect(e45Neg, eRight).intersection,
     ];
-    /*
     const body1 = [
       origin,
       petalP3,
@@ -722,8 +721,7 @@ const sketch = (p) => {
       transpose(petalP1),
       transpose(petalP2),
       transpose(petalP3),
-      ];
-      */
+    ];
 
     const headHeight = ((-1 + h2 - 0.5 * h1) * root2) / 2;
     const headHeightLine = [0, -1, headHeight];
@@ -874,7 +872,7 @@ const sketch = (p) => {
     p.background(background);
 
     p.fill(sideB);
-    polygon(...body);
+    polygon(...body1);
 
     p.push();
     p.fill(sideA);
@@ -908,7 +906,6 @@ const sketch = (p) => {
     const p2 = [p1[0] - tx, p1[1] - ty, 0];
     const k = normalize([petalP1[0] - tx, petalP1[1] - ty, 0]);
     const p3 = rotate(p2, k, n * π);
-    //    const p3 = p2;
     const p4 = [p3[0] + tx, p3[1] + ty, 0];
 
     const ifc = isFacingCamera(
