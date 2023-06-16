@@ -101,9 +101,10 @@ const folds =
 const sketch = ({ height }) => {
   const judgments = {
     θ: π / 12,
+
     h1Normalized: 1.0,
     h3Normalized: 0.8,
-    h4Normalized: 0.3,
+    h4Normalized: 0.2,
     headTopNormalized: 0.0,
     headBottomNormalized: 0.0,
   };
@@ -1582,12 +1583,14 @@ const sketch = ({ height }) => {
             ...eyeD.map(tt).map(([x, y]) => (reflect ? [-x, y] : [x, y]))
           );
         } else {
-          p.fill(darkSide);
-          triangle(
-            ...lastLittleTriangle
-              .map(tt)
-              .map(([x, y]) => (reflect ? [-x, y] : [x, y]))
-          );
+          if (θ > π / 12) {
+            p.fill(darkSide);
+            triangle(
+              ...lastLittleTriangle
+                .map(tt)
+                .map(([x, y]) => (reflect ? [-x, y] : [x, y]))
+            );
+          }
         }
         p.pop();
       }
