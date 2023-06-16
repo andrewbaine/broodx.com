@@ -103,7 +103,7 @@ const sketch = ({ height }) => {
     θ: π / 12,
     h1Normalized: 1.0,
     h3Normalized: 0.8,
-    h4Normalized: 0.7,
+    h4Normalized: 0.3,
     headTopNormalized: 0.0,
     headBottomNormalized: 0.0,
   };
@@ -157,7 +157,11 @@ const sketch = ({ height }) => {
   const h3 = judgments.h3Normalized * 2 * (h2 - 0.5 * h1);
   const h3CreaseLine = [0, 1, ((1 - 0.5 * h3) * root2) / 2];
   const headSize = headHeight - h3;
-  const h4 = h3 - judgments.h4Normalized * headSize;
+
+  const h4 = (() => {
+    let [min, max] = 0.5 * h3 < headSize ? [0.5 * h3, h3] : [h3 - headSize, h3];
+    return min + judgments.h4Normalized * (max - min);
+  })();
 
   const headHeightLine = [0, -1, ((h1 - 1) * root2) / 2];
   const headDiagonal = [1, -1, ((-1 + h2) * root2) / 2];
