@@ -103,8 +103,8 @@ const sketch = ({ height }) => {
     θ: π / 12,
 
     h1Normalized: 1.0,
-    h3Normalized: 0.8,
-    h4Normalized: 0.2,
+    h3Normalized: 0.75,
+    h4Normalized: 0.6,
     headTopNormalized: 0.0,
     headBottomNormalized: 0.0,
   };
@@ -338,7 +338,7 @@ const sketch = ({ height }) => {
       p.createCanvas(height, height, p.WEBGL);
     };
 
-    const paper = (p) => (n) => {
+    const paper = (n) => {
       p.fill(lightSide);
       polygon(
         ...[
@@ -1725,60 +1725,24 @@ const sketch = ({ height }) => {
         draw: fold2,
       },
       {
-        duration: 0.0 * dur,
-        draw: pauseBegin(petalFoldv2),
-      },
-      {
         duration: 1.0 * dur,
         draw: petalFoldv2,
-      },
-      {
-        duration: 0.0 * dur,
-        draw: pauseEnd(petalFoldv2),
-      },
-      {
-        duration: 0 * dur,
-        draw: pauseBegin(smallValley3),
       },
       {
         duration: 0 * dur,
         draw: smallValley3,
       },
       {
-        duration: 0 * dur,
-        draw: pauseEnd(smallValley3),
-      },
-      {
         duration: 1 * dur,
         draw: smallValley3v2,
-      },
-      {
-        duration: 0 * dur,
-        draw: pauseBegin(smallValley4v2),
       },
       {
         duration: 1 * dur,
         draw: smallValley4v2,
       },
       {
-        duration: 0 * dur,
-        draw: pauseEnd(smallValley4v2),
-      },
-      {
-        duration: 0 * dur,
-        draw: pauseBegin(smallMountain1v2),
-      },
-      {
         duration: 1 * dur,
         draw: smallMountain1v2,
-      },
-      {
-        duration: 0 * dur,
-        draw: pauseEnd(smallMountain1v2),
-      },
-      {
-        duration: 0 * dur,
-        draw: pauseBegin(mountain2),
       },
       {
         duration: 1 * dur,
